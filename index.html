@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>EventAI - Генератор мероприятий</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f4f7f6; padding: 20px; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: #333; }
+        label { display: block; margin-top: 15px; font-weight: bold; }
+        select, button { width: 100%; padding: 10px; margin-top: 5px; border-radius: 4px; border: 1px solid #ccc; font-size: 16px; }
+        button { background: #4CAF50; color: white; border: none; cursor: pointer; margin-top: 20px; }
+        button:hover { background: #45a049; }
+        #result { margin-top: 20px; padding: 15px; background: #f9f9f9; border-radius: 5px; min-height: 100px; white-space: pre-wrap; line-height: 1.5; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Генератор мероприятий</h2>
+    
+    <label>Праздник:</label>
+    <select id="holiday">
+        <option value="Новый год">Новый год</option>
+        <option value="1 сентября">1 сентября</option>
+        <option value="День учителя">День учителя</option>
+        <option value="8 марта">8 марта</option>
+        <option value="День космонавтики">День космонавтики</option>
+    </select>
+
+    <label>Формат:</label>
+    <select id="format">
+        <option value="short">Краткий план</option>
+        <option value="detailed">Подробный с репликами</option>
+    </select>
+
+    <button id="genBtn">Сгенерировать мероприятие</button>
+    <div id="result">Здесь появится сценарий...</div>
+</div>
+
+<script>
+document.getElementById("genBtn").onclick = function() {
+    var holiday = document.getElementById("holiday").value;
+    var format = document.getElementById("format").value;
+    var resultDiv = document.getElementById("result");
+    resultDiv.innerText = "Генерирую сценарий... Подождите 20-30 секунд.";
+    
+    var csvUrl = "https://docs.google.com/spreadsheets/d/1c0uE0lfqJLFeHzI8g1oO1qhMa5MZrwesTTEvJLL1X8/export?format=tsv&gid=0
+";
+    var apiKey = "sk_7b6ccea20b34e30927ebf8d7c864a5ec60143000b1062535";
+    
+    fetch(csvUrl)
+    .then(function(r) { return r.text(); })
+    .then(function(csvText) {
+        var rows = csvText.split("\n");
+        var examples = "";
+        for (var i = 1; i < rows.length; i++) {
+            if (!rows[i]) continue;
+            var cols = rows[i].split("\t");
+            if (cols.length > 2 && (cols[0] || "").indexOf(holiday) !== -1) {
+                examples += "Пример: " + cols[0] + ", " + cols[1] + ". Начало: " + (cols[7] || "").substring(0, 400) + "\n\n";
+                break;
+            }
+        }
+        
+        var formatInstruction = (format === "detailed") 
+            ? "Напиши ПОДРОБНЫЙ сценарий с репликами ведущих." 
+            : "Напиши КРАТКИЙ план (3-4 предложения на этап).";
+            
+        var prompt = "Напиши сценарий праздника " + holiday + ". " + formatInstruction + " Отвечай только на русском. Не выдумывай названия песен. Примеры: " + examples;
+        var apiUrl = "https://text.pollinations.ai/" + encodeURIComponent(prompt) + "?key=" + apiKey;
+        
+        return fetch(apiUrl);
+    })
+    .then(function(r) { return r.text(); })
+    .then(function(text) {
+        var clean = text.replace(/\*\*/g, "").replace(/##/g, "").replace(/\|/g, " ").replace(/\n{3,}/g, "\n\n");
+        resultDiv.innerText = clean;
+    })
+    .catch(function(e) {
+        resultDiv.innerText = "Ошибка: " + e.message + ". Проверьте ссылку на таблицу и ключ.";
+    });
+};
+</script>
+
+</body>
+</html>
