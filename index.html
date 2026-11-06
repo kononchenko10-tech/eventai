@@ -45,8 +45,7 @@ document.getElementById("genBtn").onclick = function() {
     var resultDiv = document.getElementById("result");
     resultDiv.innerText = "Генерирую сценарий... Подождите 20-30 секунд.";
     
-    var csvUrl = "https://docs.google.com/spreadsheets/d/1c0uE0lfqJLFeHzI8g1oO1qhMa5MZrwesTTEvJLL1X8/export?format=tsv&gid=0
-";
+    var csvUrl = "https://docs.google.com/spreadsheets/d/1c0uE0lfqJLFeHzI8g1oO1qhMa5MZrwesTTEvJLL1X8/export?format=tsv&gid=0";
     var apiKey = "sk_7b6ccea20b34e30927ebf8d7c864a5ec60143000b1062535";
     
     fetch(csvUrl)
