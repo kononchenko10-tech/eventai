@@ -165,59 +165,24 @@ document.getElementById("genBtn").onclick = function() {
         "Запрос №" + randomSeed;
 
                    // ВСТАВЬ СВОЙ AUTHORIZATION KEY ИЗ GIGACHAT
-        var gigaChatKey = "MDFhMWIyODYtMzcyMS03YWI4LTgwZjEtNzMzNTFjOGQ2OGQ5OjFhOWY4ZmU4LWQzZmItNDgzOS05ZTBjLWQ0NGUxYTk4MzUwYw==";
-
-        // GigaChat требует сначала получить токен доступа (access_token), а потом делать запрос
-        var authUrl = "https://ngw.devices.sberbank.ru:9443/api/v2/oauth";
-        var authBody = "scope=GIGACHAT_API_PERS";
+                // Ссылка на твое веб-приложение Google Apps Script (прокси)
+        var proxyUrl = "https://script.google.com/macros/s/AKfycbypr9EvxXaMB6OJXDhNsTmofCZgXoDuxLqwY2O7vkdv-6Pxlipa8M_FFr9DnsoSys0m/exec";
         
-        return fetch(authUrl, {
+        return fetch(proxyUrl, {
             method: "POST",
-            headers: {
-                "Content-Type": "application/x-www-form-urlencoded",
-                "Accept": "application/json",
-                "RqUID": "6f0b1291-c7f3-43c6-bb2e-9f5e0e2d0e1a", // Уникальный ID запроса (можно любой)
-                "Authorization": "Basic " + gigaChatKey
-            },
-            body: authBody
-        })
-        .then(function(authResp) {
-            if (!authResp.ok) throw new Error("Ошибка авторизации GigaChat: " + authResp.status);
-            return authResp.json();
-        })
-        .then(function(authData) {
-            var accessToken = authData.access_token;
-            
-            // Теперь отправляем сам запрос к GigaChat
-            var apiUrl = "https://gigachat.devices.sberbank.ru/api/v1/chat/completions";
-            var requestBody = {
-                model: "GigaChat",
-                messages: [{ role: "user", content: prompt }],
-                temperature: 0.7,
-                max_tokens: 2000
-            };
-
-            return fetch(apiUrl, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Accept": "application/json",
-                    "Authorization": "Bearer " + accessToken
-                },
-                body: JSON.stringify(requestBody)
-            });
+            body: JSON.stringify({ prompt: prompt })
         })
         .then(function(resp) {
-            if (!resp.ok) throw new Error("Ошибка генерации GigaChat: " + resp.status);
+            if (!resp.ok) throw new Error("Ошибка прокси: " + resp.status);
             return resp.json();
         })
         .then(function(data) {
-            var text = data.choices[0].message.content;
+            var text = data.result || "Пустой ответ.";
             var clean = text.replace(/\*\*/g, "").replace(/##/g, "").replace(/\|/g, " ").replace(/\n{3,}/g, "\n\n");
             resultDiv.innerText = clean;
         })
         .catch(function(e) {
-            resultDiv.innerText = "Ошибка: " + e.message + ". Проверьте ключ GigaChat.";
+            resultDiv.innerText = "Ошибка: " + e.message;
         });
     });
 };
