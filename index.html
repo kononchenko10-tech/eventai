@@ -164,16 +164,20 @@ document.getElementById("genBtn").onclick = function() {
         "Примеры для вдохновения из базы (не копируй дословно): " + examples + " " +
         "Запрос №" + randomSeed;
 
+           // ВСТАВЬ СВОЙ КЛЮЧ ИЗ ROUTERAI (тот, что на скриншоте)
+        var routerAiKey = "sk-uCPJ8y-MD6xwbrsOAcemI0FbG56EZuwg";
+
         var requestBody = {
-            model: "openrouter/free",
+            // У RouterAI могут быть свои названия моделей. Попробуем стандартное для бесплатных.
+            model: "openai/gpt-4o-mini", 
             messages: [{ role: "user", content: prompt }],
             max_tokens: 2500
         };
 
-        return fetch("https://openrouter.ai/api/v1/chat/completions", {
+        return fetch("https://routerai.ru/api/v1/chat/completions", {
             method: "POST",
             headers: {
-                "Authorization": "Bearer " + openRouterKey,
+                "Authorization": "Bearer " + routerAiKey,
                 "Content-Type": "application/json"
             },
             body: JSON.stringify(requestBody)
