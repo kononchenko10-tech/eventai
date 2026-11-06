@@ -165,13 +165,13 @@ document.getElementById("genBtn").onclick = function() {
         "Запрос №" + randomSeed;
 
            // ВСТАВЬ СВОЙ КЛЮЧ ИЗ ROUTERAI (тот, что на скриншоте)
+               // ТВОЙ КЛЮЧ (уже вставлен)
         var routerAiKey = "sk-uCPJ8y-MD6xwbrsOAcemI0FbG56EZuwg";
 
         var requestBody = {
-            // У RouterAI могут быть свои названия моделей. Попробуем стандартное для бесплатных.
-            model: "openai/gpt-4o-mini", 
+            model: "openai/gpt-4o-mini", // Если не сработает, попробуем "anthropic/claude-3-haiku"
             messages: [{ role: "user", content: prompt }],
-            max_tokens: 2500
+            max_tokens: 2000
         };
 
         return fetch("https://routerai.ru/api/v1/chat/completions", {
@@ -181,18 +181,19 @@ document.getElementById("genBtn").onclick = function() {
                 "Content-Type": "application/json"
             },
             body: JSON.stringify(requestBody)
+        })
+        .then(function(resp) {
+            if (!resp.ok) throw new Error("Ошибка RouterAI: " + resp.status);
+            return resp.json();
+        })
+        .then(function(data) {
+            var text = data.choices[0].message.content;
+            var clean = text.replace(/\*\*/g, "").replace(/##/g, "").replace(/\|/g, " ").replace(/\n{3,}/g, "\n\n");
+            resultDiv.innerText = clean;
+        })
+        .catch(function(e) {
+            resultDiv.innerText = "Ошибка: " + e.message;
         });
-    })
-    .then(function(resp) {
-        if (!resp.ok) throw new Error("Ошибка OpenRouter: " + resp.status);
-        return resp.json();
-    })
-    .then(function(data) {
-        var text = data.choices[0].message.content;
-        resultDiv.innerText = cleanText(text);
-    })
-    .catch(function(e) {
-        resultDiv.innerText = "Ошибка: " + e.message + ". Проверьте ключ OpenRouter.";
     });
 };
 </script>
