@@ -104,7 +104,6 @@ document.getElementById("genBtn").onclick = function() {
     if (classFrom > classTo) { var t = classFrom; classFrom = classTo; classTo = t; }
     
     var csvUrl = "https://docs.google.com/spreadsheets/d/1c0uE0lfqJLFeHzI8g1oO1qhMa5MZrwesTTEvJLL1X8/export?format=tsv&gid=0";
-    var openRouterKey = "MDFhMWIyODYtMzcyMS03YWI4LTgwZjEtNzMzNTFjOGQ2OGQ5OjhmMjRmMGM4LTMxMjgtNGE1ZS1hMjY5LWJjODVhMDljYTA4Ng=="; // ВСТАВЬ СВОЙ КЛЮЧ
 
     var classDescription = (classFrom === classTo) ? (classFrom + " класс") : ("классы с " + classFrom + " по " + classTo);
 
@@ -134,7 +133,7 @@ document.getElementById("genBtn").onclick = function() {
                     var shortText = cols[7] ? cols[7].substring(0, 300) : "";
                     examples += "Пример: " + cols[0] + ", " + cols[1] + ", " + cols[3] + ". Начало: " + shortText + "\n\n";
                     foundCount++;
-                    if (foundCount >= 1) break; // Берём 1 пример, чтобы не перегружать
+                    if (foundCount >= 1) break;
                 }
             }
         }
@@ -164,26 +163,23 @@ document.getElementById("genBtn").onclick = function() {
         "Примеры для вдохновения из базы (не копируй дословно): " + examples + " " +
         "Запрос №" + randomSeed;
 
-                   // ВСТАВЬ СВОЙ AUTHORIZATION KEY ИЗ GIGACHAT
-                // Ссылка на твое веб-приложение Google Apps Script (прокси)
         var proxyUrl = "https://script.google.com/macros/s/AKfycbypr9EvxXaMB6OJXDhNsTmofCZgXoDuxLqwY2O7vkdv-6Pxlipa8M_FFr9DnsoSys0m/exec";
         
         return fetch(proxyUrl, {
             method: "POST",
             body: JSON.stringify({ prompt: prompt })
-        })
-        .then(function(resp) {
-            if (!resp.ok) throw new Error("Ошибка прокси: " + resp.status);
-            return resp.json();
-        })
-        .then(function(data) {
-            var text = data.result || "Пустой ответ.";
-            var clean = text.replace(/\*\*/g, "").replace(/##/g, "").replace(/\|/g, " ").replace(/\n{3,}/g, "\n\n");
-            resultDiv.innerText = clean;
-        })
-        .catch(function(e) {
-            resultDiv.innerText = "Ошибка: " + e.message;
         });
+    })
+    .then(function(resp) {
+        if (!resp.ok) throw new Error("Ошибка прокси: " + resp.status);
+        return resp.json();
+    })
+    .then(function(data) {
+        var text = data.result || "Пустой ответ.";
+        resultDiv.innerText = cleanText(text);
+    })
+    .catch(function(e) {
+        resultDiv.innerText = "Ошибка: " + e.message;
     });
 };
 </script>
