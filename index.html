@@ -165,11 +165,11 @@ document.getElementById("genBtn").onclick = function() {
         "Запрос №" + randomSeed;
 
            // ВСТАВЬ СВОЙ КЛЮЧ ИЗ ROUTERAI (тот, что на скриншоте)
-               // ТВОЙ КЛЮЧ (уже вставлен)
+                       // ТВОЙ КЛЮЧ ROUTERAI
         var routerAiKey = "sk-uCPJ8y-MD6xwbrsOAcemI0FbG56EZuwg";
 
         var requestBody = {
-            model: "openai/gpt-4o-mini", // Если не сработает, попробуем "anthropic/claude-3-haiku"
+            model: "openai/gpt-4o-mini", 
             messages: [{ role: "user", content: prompt }],
             max_tokens: 2000
         };
@@ -197,6 +197,5 @@ document.getElementById("genBtn").onclick = function() {
     });
 };
 </script>
-
 </body>
 </html>
