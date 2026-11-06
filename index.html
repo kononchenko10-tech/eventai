@@ -8,8 +8,13 @@
         .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
         h2 { text-align: center; color: #333; }
         label { display: block; margin-top: 15px; font-weight: bold; }
-        select, button { width: 100%; padding: 10px; margin-top: 5px; border-radius: 4px; border: 1px solid #ccc; font-size: 16px; }
-        button { background: #4CAF50; color: white; border: none; cursor: pointer; margin-top: 20px; }
+        select, button, input[type="checkbox"] { margin-top: 5px; }
+        select { width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #ccc; font-size: 16px; }
+        .row { display: flex; gap: 10px; }
+        .col { flex: 1; }
+        .checkbox-group { margin-top: 15px; padding: 15px; background: #f0f8ff; border: 1px solid #b0d4f1; border-radius: 5px; }
+        .checkbox-group label { font-weight: normal; display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+        button { width: 100%; padding: 12px; background: #4CAF50; color: white; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; margin-top: 20px; }
         button:hover { background: #45a049; }
         #result { margin-top: 20px; padding: 15px; background: #f9f9f9; border-radius: 5px; min-height: 100px; white-space: pre-wrap; line-height: 1.5; }
     </style>
@@ -28,59 +33,141 @@
         <option value="День космонавтики">День космонавтики</option>
     </select>
 
-    <label>Формат:</label>
+    <div class="row" style="margin-top: 15px;">
+        <div class="col">
+            <label>От класса:</label>
+            <select id="classFrom">
+                <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+                <option value="4">4</option><option value="5">5</option><option value="6">6</option>
+                <option value="7">7</option><option value="8">8</option><option value="9">9</option>
+                <option value="10">10</option><option value="11">11</option>
+            </select>
+        </div>
+        <div class="col">
+            <label>До класса:</label>
+            <select id="classTo">
+                <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+                <option value="4">4</option><option value="5">5</option><option value="6">6</option>
+                <option value="7">7</option><option value="8">8</option><option value="9">9</option>
+                <option value="10">10</option><option value="11" selected>11</option>
+            </select>
+        </div>
+    </div>
+
+    <label style="margin-top: 15px;">Формат:</label>
     <select id="format">
         <option value="short">Краткий план</option>
         <option value="detailed">Подробный с репликами</option>
     </select>
+
+    <div class="checkbox-group">
+        <p style="font-weight: bold; margin-top: 0;">Что можно использовать?</p>
+        <label><input type="checkbox" id="useMobile"> Мобильные устройства</label>
+        <label><input type="checkbox" id="useQR"> QR-коды</label>
+        <label><input type="checkbox" id="useQuiz"> Онлайн-квизы</label>
+    </div>
 
     <button id="genBtn">Сгенерировать мероприятие</button>
     <div id="result">Здесь появится сценарий...</div>
 </div>
 
 <script>
+function cleanText(inputText) {
+    var lines = inputText.split("\n");
+    var cleaned = [];
+    for (var i = 0; i < lines.length; i++) {
+        var line = lines[i];
+        if (/^[\s\|\-\+]+$/.test(line)) continue;
+        if (line.indexOf("|") !== -1) {
+            line = line.replace(/\|/g, "  ").replace(/\s+/g, " ").trim();
+            if (line === "") continue;
+        }
+        line = line.replace(/\*\*/g, "").replace(/##/g, "").replace(/---/g, "");
+        line = line.replace(/#{1,6}\s/g, "").replace(/^\s*\*\s/g, "- ");
+        cleaned.push(line);
+    }
+    return cleaned.join("\n").replace(/\n{3,}/g, "\n\n");
+}
+
 document.getElementById("genBtn").onclick = function() {
     var holiday = document.getElementById("holiday").value;
+    var classFrom = parseInt(document.getElementById("classFrom").value);
+    var classTo = parseInt(document.getElementById("classTo").value);
     var format = document.getElementById("format").value;
+    var useMobile = document.getElementById("useMobile").checked;
+    var useQR = document.getElementById("useQR").checked;
+    var useQuiz = document.getElementById("useQuiz").checked;
+    
     var resultDiv = document.getElementById("result");
-    resultDiv.innerText = "Генерирую сценарий... Подождите 20-30 секунд.";
+    resultDiv.innerText = "Генерирую... Подождите 20-30 секунд.";
+    
+    if (classFrom > classTo) { var t = classFrom; classFrom = classTo; classTo = t; }
     
     var csvUrl = "https://docs.google.com/spreadsheets/d/1c0uE0lfqJLFeHzI8g1oO1qhMa5MZrwesTTEvJLL1X8/export?format=tsv&gid=0";
-    var apiKey = "sk_7b6ccea20b34e30927ebf8d7c864a5ec60143000b1062535";
-    
+    var openRouterKey = "sk-uCPJ8y-MD6xwbrsOACemIOFb6S6Ezuwg"; // ВСТАВЬ СВОЙ КЛЮЧ
+
+    var classDescription = (classFrom === classTo) ? (classFrom + " класс") : ("классы с " + classFrom + " по " + classTo);
+
     fetch(csvUrl)
     .then(function(r) { return r.text(); })
     .then(function(csvText) {
         var rows = csvText.split("\n");
         var examples = "";
-        for (var i = 1; i < rows.length; i++) {
-            if (!rows[i]) continue;
-            var cols = rows[i].split("\t");
-            if (cols.length > 2 && (cols[0] || "").indexOf(holiday) !== -1) {
-                examples += "Пример: " + cols[0] + ", " + cols[1] + ". Начало: " + (cols[7] || "").substring(0, 400) + "\n\n";
-                break;
+        
+        function classMatches(dbClass, from, to) {
+            if (!dbClass) return false;
+            var db = dbClass.toString().trim();
+            if (db.indexOf("-") !== -1) {
+                var parts = db.split("-");
+                return !(parseInt(parts[1]) < from || parseInt(parts[0]) > to);
             }
+            var num = parseInt(db);
+            return !isNaN(num) && num >= from && num <= to;
         }
         
-        var formatInstruction = (format === "detailed") 
-            ? "Напиши ПОДРОБНЫЙ сценарий с репликами ведущих." 
-            : "Напиши КРАТКИЙ план (3-4 предложения на этап).";
-            
+        var foundCount = 0;
+        for (var i = 1; i < rows.length; i++) {
+            if (!rows[i].trim()) continue;
+            var cols = rows[i].split("\t");
+            if (cols.length > 2) {
+                if ((cols[0] || "").indexOf(holiday) !== -1 && classMatches(cols[1] || "", classFrom, classTo)) {
+                    var shortText = cols[7] ? cols[7].substring(0, 300) : "";
+                    examples += "Пример: " + cols[0] + ", " + cols[1] + ", " + cols[3] + ". Начало: " + shortText + "\n\n";
+                    foundCount++;
+                    if (foundCount >= 1) break; // Берём 1 пример, чтобы не перегружать
+                }
+            }
+        }
+        if (examples === "") examples = "Нет точных совпадений в базе.";
+
+        var formatInstruction = (format === "detailed")
+            ? "Формат: ПОДРОБНЫЙ сценарий. Пиши реплики ведущих и описания действий в скобках."
+            : "Формат: КРАТКИЙ план. 3-4 предложения на каждый этап.";
+
+        var allowed = [];
+        var forbidden = [];
+        if (useMobile) allowed.push("мобильные устройства"); else forbidden.push("мобильные устройства");
+        if (useQR) allowed.push("QR-коды"); else forbidden.push("QR-коды");
+        if (useQuiz) allowed.push("онлайн-квизы"); else forbidden.push("онлайн-квизы");
+        
+        var techConstraints = "";
+        if (allowed.length > 0) techConstraints += "РАЗРЕШЕНО ИСПОЛЬЗОВАТЬ: " + allowed.join(", ") + ". ";
+        if (forbidden.length > 0) techConstraints += "КАТЕГОРИЧЕСКИ ЗАПРЕЩЕНО ИСПОЛЬЗОВАТЬ: " + forbidden.join(", ") + ". Если они запрещены, придумай альтернативы (игры на бумаге, эстафеты, конкурсы у доски). ";
+
+        var randomSeed = Math.floor(Math.random() * 100000);
+
         var prompt = "Ты — школьный учитель и организатор мероприятий. Напиши сценарий для школьного праздника '" + holiday + "'. " +
-"Аудитория — ученики (дети). " +
-"ЗАПРЕЩЕНО: писать про алкоголь, романтику, взрослые конкурсы, ужины, танцы для взрослых. " +
-"ОБЯЗАТЕЛЬНО: используй школьные конкурсы, игры на внимание, викторины, эстафеты, загадки. " +
-"Формат: " + (format === "detailed" ? "Подробный, с репликами ведущих и описанием действий." : "Краткий план по этапам.") + " " +
-"Примеры для вдохновения из базы (не копируй дословно): " + examples + " ";
-                // ВСТАВЬ СВОЙ КЛЮЧ OPENROUTER
-        var openRouterKey = "sk-or-v1-ТВОЙ_КЛЮЧ_СЮДА";
+        "Аудитория — ученики (" + classDescription + "). " +
+        "ЗАПРЕЩЕНО: писать про алкоголь, романтику, взрослые конкурсы, ужины, танцы для взрослых. " +
+        "ОБЯЗАТЕЛЬНО: используй школьные конкурсы, игры на внимание, викторины, эстафеты, загадки. " +
+        formatInstruction + " " + techConstraints + " " +
+        "Примеры для вдохновения из базы (не копируй дословно): " + examples + " " +
+        "Запрос №" + randomSeed;
 
         var requestBody = {
             model: "openrouter/free",
-            messages: [
-                { role: "user", content: prompt }
-            ],
-            max_tokens: 2000
+            messages: [{ role: "user", content: prompt }],
+            max_tokens: 2500
         };
 
         return fetch("https://openrouter.ai/api/v1/chat/completions", {
@@ -90,22 +177,18 @@ document.getElementById("genBtn").onclick = function() {
                 "Content-Type": "application/json"
             },
             body: JSON.stringify(requestBody)
-        })
-        .then(function(resp) {
-            if (!resp.ok) throw new Error("Ошибка OpenRouter: " + resp.status);
-            return resp.json();
-        })
-        .then(function(data) {
-            var text = data.choices[0].message.content;
-            var clean = text.replace(/\*\*/g, "").replace(/##/g, "").replace(/\|/g, " ").replace(/\n{3,}/g, "\n\n");
-            resultDiv.innerText = clean;
-        })
-        .catch(function(e) {
-            resultDiv.innerText = "Ошибка: " + e.message;
         });
     })
+    .then(function(resp) {
+        if (!resp.ok) throw new Error("Ошибка OpenRouter: " + resp.status);
+        return resp.json();
+    })
+    .then(function(data) {
+        var text = data.choices[0].message.content;
+        resultDiv.innerText = cleanText(text);
+    })
     .catch(function(e) {
-        resultDiv.innerText = "Ошибка: " + e.message + ". Проверьте ссылку на таблицу и ключ.";
+        resultDiv.innerText = "Ошибка: " + e.message + ". Проверьте ключ OpenRouter.";
     });
 };
 </script>
