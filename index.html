@@ -72,14 +72,37 @@ document.getElementById("genBtn").onclick = function() {
 "ОБЯЗАТЕЛЬНО: используй школьные конкурсы, игры на внимание, викторины, эстафеты, загадки. " +
 "Формат: " + (format === "detailed" ? "Подробный, с репликами ведущих и описанием действий." : "Краткий план по этапам.") + " " +
 "Примеры для вдохновения из базы (не копируй дословно): " + examples + " ";
-        var apiUrl = "https://text.pollinations.ai/" + encodeURIComponent(prompt) + "?key=" + apiKey;
-        
-        return fetch(apiUrl);
-    })
-    .then(function(r) { return r.text(); })
-    .then(function(text) {
-        var clean = text.replace(/\*\*/g, "").replace(/##/g, "").replace(/\|/g, " ").replace(/\n{3,}/g, "\n\n");
-        resultDiv.innerText = clean;
+                // ВСТАВЬ СВОЙ КЛЮЧ OPENROUTER
+        var openRouterKey = "sk-or-v1-ТВОЙ_КЛЮЧ_СЮДА";
+
+        var requestBody = {
+            model: "openrouter/free",
+            messages: [
+                { role: "user", content: prompt }
+            ],
+            max_tokens: 2000
+        };
+
+        return fetch("https://openrouter.ai/api/v1/chat/completions", {
+            method: "POST",
+            headers: {
+                "Authorization": "Bearer " + openRouterKey,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(requestBody)
+        })
+        .then(function(resp) {
+            if (!resp.ok) throw new Error("Ошибка OpenRouter: " + resp.status);
+            return resp.json();
+        })
+        .then(function(data) {
+            var text = data.choices[0].message.content;
+            var clean = text.replace(/\*\*/g, "").replace(/##/g, "").replace(/\|/g, " ").replace(/\n{3,}/g, "\n\n");
+            resultDiv.innerText = clean;
+        })
+        .catch(function(e) {
+            resultDiv.innerText = "Ошибка: " + e.message;
+        });
     })
     .catch(function(e) {
         resultDiv.innerText = "Ошибка: " + e.message + ". Проверьте ссылку на таблицу и ключ.";
