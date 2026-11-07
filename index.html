@@ -71,6 +71,9 @@
     <div id="result">Здесь появится сценарий...</div>
 </div>
 
+<!-- Скрытый iframe для приема ответа -->
+<iframe name="responseFrame" id="responseFrame" style="display:none;"></iframe>
+
 <script>
 function cleanText(inputText) {
     var lines = inputText.split("\n");
@@ -99,88 +102,62 @@ document.getElementById("genBtn").onclick = function() {
     var useQuiz = document.getElementById("useQuiz").checked;
     
     var resultDiv = document.getElementById("result");
-    resultDiv.innerText = "Ищу подходящие сценарии в базе и собираю мероприятие... (20-30 сек)";
+    resultDiv.innerText = "Генерирую... Подождите 20-30 секунд.";
     
     if (classFrom > classTo) { var t = classFrom; classFrom = classTo; classTo = t; }
     
-    // ССЫЛКА НА ТАБЛИЦУ
-    var csvUrl = "https://script.google.com/macros/s/AKfycbypr9EvxXaMB6OJXDhNsTmofCZgXoDuxLqwY2O7vkdv-6Pxlipa8M_FFr9DnsoSys0m/exec";
     // ССЫЛКА НА ТВОЕ ВЕБ-ПРИЛОЖЕНИЕ APPS SCRIPT
     var proxyUrl = "https://script.google.com/macros/s/AKfycbypr9EvxXaMB6OJXDhNsTmofCZgXoDuxLqwY2O7vkdv-6Pxlipa8M_FFr9DnsoSys0m/exec"; 
 
     var classDescription = (classFrom === classTo) ? (classFrom + " класс") : ("классы с " + classFrom + " по " + classTo);
 
-    fetch(csvUrl)
-    .then(function(r) { return r.text(); })
-    .then(function(csvText) {
-        var rows = csvText.split("\n");
-        var foundScripts = [];
-        
-        function classMatches(dbClass, from, to) {
-            if (!dbClass) return false;
-            var db = dbClass.toString().trim();
-            if (db.indexOf("-") !== -1) {
-                var parts = db.split("-");
-                return !(parseInt(parts[1]) < from || parseInt(parts[0]) > to);
-            }
-            var num = parseInt(db);
-            return !isNaN(num) && num >= from && num <= to;
-        }
-        
-        // Ищем до 3-х подходящих сценариев
-        for (var i = 1; i < rows.length; i++) {
-            if (!rows[i].trim()) continue;
-            var cols = rows[i].split("\t");
-            if (cols.length > 2) {
-                if ((cols[0] || "").indexOf(holiday) !== -1 && classMatches(cols[1] || "", classFrom, classTo)) {
-                    var fullText = cols[7] ? cols[7].trim() : "";
-                    if (fullText.length > 50) {
-                        foundScripts.push(fullText);
-                    }
-                    if (foundScripts.length >= 3) break; 
-                }
-            }
-        }
-        
-        if (foundScripts.length === 0) {
-            resultDiv.innerText = "В базе нет готовых сценариев для этого праздника и класса.";
-            return;
-        }
+    // Формируем промпт
+    var formatInstruction = (format === "detailed") 
+        ? "Формат: ПОДРОБНЫЙ сценарий с репликами ведущих." 
+        : "Формат: КРАТКИЙ план по этапам.";
+    
+    var techConstraints = "";
+    var allowed = [];
+    if (useMobile) allowed.push("мобильные устройства");
+    if (useQR) allowed.push("QR-коды");
+    if (useQuiz) allowed.push("онлайн-квизы");
+    if (allowed.length > 0) techConstraints = "Можно использовать: " + allowed.join(", ") + ". ";
 
-        var materials = foundScripts.join("\n\n---НОВЫЙ КУСОК---\n\n");
-        
-        // Строгий промпт для структурирования
-        var prompt = "Ты — редактор школьных сценариев. Твоя задача — СОБРАТЬ один цельный и КРАСИВЫЙ сценарий из предоставленных ниже кусков.\n\n" +
-        "ЖЁСТКАЯ СТРУКТУРА (соблюдай её строго!):\n" +
-        "1. ВСТУПЛЕНИЕ (приветствие ведущего).\n" +
-        "2. КОНКУРС 1 (выбери самый подходящий для этого возраста).\n" +
-        "3. КОНКУРС 2 (выбери другой, чтобы не было повторов).\n" +
-        "4. ФИНАЛ (завершение, благодарность).\n\n" +
-        "ПРАВИЛА:\n" +
-        "- НЕ придумывай новые конкурсы. Используй только то, что есть в кусках.\n" +
-        "- Сделай плавные переходы (например: 'А теперь давайте поиграем...').\n" +
-        "- Убери повторы.\n" +
-        "- Добавь тайминг для каждого этапа (0:00-0:05 и т.д.).\n\n" +
-        "Вот куски из моей базы:\n" + materials;
+    var prompt = "Ты — школьный учитель. Напиши сценарий праздника '" + holiday + "' для " + classDescription + ". " +
+        formatInstruction + " " + techConstraints + " Не придумывай названия песен. Пиши только на русском.";
 
-        return fetch(proxyUrl, {
-            method: "POST",
-            body: JSON.stringify({ prompt: prompt })
-        });
-    })
-    .then(function(resp) {
-        if (!resp.ok) throw new Error("Ошибка прокси: " + resp.status);
-        return resp.json();
-    })
-    .then(function(data) {
-        var text = data.result || "Пустой ответ.";
-        resultDiv.innerText = cleanText(text);
-    })
-    .catch(function(e) {
-        resultDiv.innerText = "Ошибка: " + e.message;
-    });
+    // Создаем форму и отправляем её в iframe
+    var form = document.createElement("form");
+    form.method = "POST";
+    form.action = proxyUrl;
+    form.target = "responseFrame";
+
+    var input = document.createElement("input");
+    input.type = "hidden";
+    input.name = "prompt";
+    input.value = prompt;
+    form.appendChild(input);
+
+    document.body.appendChild(form);
+    form.submit();
+    document.body.removeChild(form);
+
+    // Слушаем ответ от iframe
+    var iframe = document.getElementById("responseFrame");
+    iframe.onload = function() {
+        try {
+            var content = iframe.contentDocument.body.innerText;
+            var data = JSON.parse(content);
+            resultDiv.innerText = cleanText(data.result);
+        } catch (e) {
+            resultDiv.innerText = "Ошибка: не удалось прочитать ответ. Попробуйте ещё раз.";
+        }
+    };
 };
 </script>
+
+</body>
+</html>
 
 </body>
 </html>
