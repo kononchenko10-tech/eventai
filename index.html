@@ -71,7 +71,7 @@
     <div id="result">Здесь появится сценарий...</div>
 </div>
 
-<!-- Скрытый iframe для приема ответа -->
+<!-- Скрытый iframe для приема ответа от Cloudflare -->
 <iframe name="responseFrame" id="responseFrame" style="display:none;"></iframe>
 
 <script>
@@ -106,12 +106,11 @@ document.getElementById("genBtn").onclick = function() {
     
     if (classFrom > classTo) { var t = classFrom; classFrom = classTo; classTo = t; }
     
-    // ССЫЛКА НА ТВОЕ ВЕБ-ПРИЛОЖЕНИЕ APPS SCRIPT
+    // ССЫЛКА НА ТВОЙ CLOUDFLARE WORKER
     var proxyUrl = "https://eventai.kononchenko10.workers.dev/"; 
 
     var classDescription = (classFrom === classTo) ? (classFrom + " класс") : ("классы с " + classFrom + " по " + classTo);
 
-    // Формируем промпт
     var formatInstruction = (format === "detailed") 
         ? "Формат: ПОДРОБНЫЙ сценарий с репликами ведущих." 
         : "Формат: КРАТКИЙ план по этапам.";
@@ -155,9 +154,6 @@ document.getElementById("genBtn").onclick = function() {
     };
 };
 </script>
-
-</body>
-</html>
 
 </body>
 </html>
