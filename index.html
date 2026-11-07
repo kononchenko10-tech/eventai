@@ -99,11 +99,14 @@ document.getElementById("genBtn").onclick = function() {
     var useQuiz = document.getElementById("useQuiz").checked;
     
     var resultDiv = document.getElementById("result");
-    resultDiv.innerText = "Генерирую... Подождите 20-30 секунд.";
+    resultDiv.innerText = "Ищу подходящие сценарии в базе и собираю мероприятие... (20-30 сек)";
     
     if (classFrom > classTo) { var t = classFrom; classFrom = classTo; classTo = t; }
     
+    // ССЫЛКА НА ТАБЛИЦУ
     var csvUrl = "https://docs.google.com/spreadsheets/d/1c0uE0lfqJLFeHzI8g1oO1qhMa5MZrwesTTEvJLL1X8/export?format=tsv&gid=0";
+    // ССЫЛКА НА ТВОЕ ВЕБ-ПРИЛОЖЕНИЕ APPS SCRIPT
+    var proxyUrl = "https://script.google.com/macros/s/AKfycbypr9EvxXaMB6OJXDhNsTmofCZgXoDuxLqwY2O7vkdv-6Pxlipa8M_FFr9DnsoSys0m/exec"; 
 
     var classDescription = (classFrom === classTo) ? (classFrom + " класс") : ("классы с " + classFrom + " по " + classTo);
 
@@ -111,7 +114,7 @@ document.getElementById("genBtn").onclick = function() {
     .then(function(r) { return r.text(); })
     .then(function(csvText) {
         var rows = csvText.split("\n");
-        var examples = "";
+        var foundScripts = [];
         
         function classMatches(dbClass, from, to) {
             if (!dbClass) return false;
@@ -124,47 +127,42 @@ document.getElementById("genBtn").onclick = function() {
             return !isNaN(num) && num >= from && num <= to;
         }
         
-        var foundCount = 0;
+        // Ищем до 3-х подходящих сценариев
         for (var i = 1; i < rows.length; i++) {
             if (!rows[i].trim()) continue;
             var cols = rows[i].split("\t");
             if (cols.length > 2) {
                 if ((cols[0] || "").indexOf(holiday) !== -1 && classMatches(cols[1] || "", classFrom, classTo)) {
-                    var shortText = cols[7] ? cols[7].substring(0, 300) : "";
-                    examples += "Пример: " + cols[0] + ", " + cols[1] + ", " + cols[3] + ". Начало: " + shortText + "\n\n";
-                    foundCount++;
-                    if (foundCount >= 1) break;
+                    var fullText = cols[7] ? cols[7].trim() : "";
+                    if (fullText.length > 50) {
+                        foundScripts.push(fullText);
+                    }
+                    if (foundScripts.length >= 3) break; 
                 }
             }
         }
-        if (examples === "") examples = "Нет точных совпадений в базе.";
-
-        var formatInstruction = (format === "detailed")
-            ? "Формат: ПОДРОБНЫЙ сценарий. Пиши реплики ведущих и описания действий в скобках."
-            : "Формат: КРАТКИЙ план. 3-4 предложения на каждый этап.";
-
-        var allowed = [];
-        var forbidden = [];
-        if (useMobile) allowed.push("мобильные устройства"); else forbidden.push("мобильные устройства");
-        if (useQR) allowed.push("QR-коды"); else forbidden.push("QR-коды");
-        if (useQuiz) allowed.push("онлайн-квизы"); else forbidden.push("онлайн-квизы");
         
-        var techConstraints = "";
-        if (allowed.length > 0) techConstraints += "РАЗРЕШЕНО ИСПОЛЬЗОВАТЬ: " + allowed.join(", ") + ". ";
-        if (forbidden.length > 0) techConstraints += "КАТЕГОРИЧЕСКИ ЗАПРЕЩЕНО ИСПОЛЬЗОВАТЬ: " + forbidden.join(", ") + ". Если они запрещены, придумай альтернативы (игры на бумаге, эстафеты, конкурсы у доски). ";
+        if (foundScripts.length === 0) {
+            resultDiv.innerText = "В базе нет готовых сценариев для этого праздника и класса.";
+            return;
+        }
 
-        var randomSeed = Math.floor(Math.random() * 100000);
-
-        var prompt = "Ты — школьный учитель и организатор мероприятий. Напиши сценарий для школьного праздника '" + holiday + "'. " +
-        "Аудитория — ученики (" + classDescription + "). " +
-        "ЗАПРЕЩЕНО: писать про алкоголь, романтику, взрослые конкурсы, ужины, танцы для взрослых. " +
-        "ОБЯЗАТЕЛЬНО: используй школьные конкурсы, игры на внимание, викторины, эстафеты, загадки. " +
-        formatInstruction + " " + techConstraints + " " +
-        "Примеры для вдохновения из базы (не копируй дословно): " + examples + " " +
-        "Запрос №" + randomSeed;
-
-        var proxyUrl = "https://script.google.com/macros/s/AKfycbypr9EvxXaMB6OJXDhNsTmofCZgXoDuxLqwY2O7vkdv-6Pxlipa8M_FFr9DnsoSys0m/exec";
+        var materials = foundScripts.join("\n\n---НОВЫЙ КУСОК---\n\n");
         
+        // Строгий промпт для структурирования
+        var prompt = "Ты — редактор школьных сценариев. Твоя задача — СОБРАТЬ один цельный и КРАСИВЫЙ сценарий из предоставленных ниже кусков.\n\n" +
+        "ЖЁСТКАЯ СТРУКТУРА (соблюдай её строго!):\n" +
+        "1. ВСТУПЛЕНИЕ (приветствие ведущего).\n" +
+        "2. КОНКУРС 1 (выбери самый подходящий для этого возраста).\n" +
+        "3. КОНКУРС 2 (выбери другой, чтобы не было повторов).\n" +
+        "4. ФИНАЛ (завершение, благодарность).\n\n" +
+        "ПРАВИЛА:\n" +
+        "- НЕ придумывай новые конкурсы. Используй только то, что есть в кусках.\n" +
+        "- Сделай плавные переходы (например: 'А теперь давайте поиграем...').\n" +
+        "- Убери повторы.\n" +
+        "- Добавь тайминг для каждого этапа (0:00-0:05 и т.д.).\n\n" +
+        "Вот куски из моей базы:\n" + materials;
+
         return fetch(proxyUrl, {
             method: "POST",
             body: JSON.stringify({ prompt: prompt })
@@ -183,5 +181,6 @@ document.getElementById("genBtn").onclick = function() {
     });
 };
 </script>
+
 </body>
 </html>
