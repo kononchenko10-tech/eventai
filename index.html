@@ -54,18 +54,33 @@
 </div>
 
 <script>
+// УМНАЯ ОЧИСТКА ТЕКСТА
 function cleanText(inputText) {
-    return inputText.replace(/\*\*/g, "").replace(/##/g, "").replace(/\|/g, " ").replace(/\n{3,}/g, "\n\n");
+    var text = inputText;
+    
+    // 1. Убираем типичные вступления нейросети (если они проскочили)
+    text = text.replace(/^(Привет!|Здравствуйте!|Конечно!|Вот сценарий[^.]*\.|Как учитель[^.]*\.)\s*/i, "");
+    
+    // 2. Убираем markdown-символы (звездочки, решетки, палки)
+    text = text.replace(/\*\*/g, ""); // убираем **
+    text = text.replace(/#/g, "");    // убираем #
+    text = text.replace(/\|/g, " ");  // убираем |
+    text = text.replace(/---/g, "");  // убираем ---
+    
+    // 3. Убираем лишние пустые строки (больше двух подряд)
+    text = text.replace(/\n{3,}/g, "\n\n");
+    
+    // 4. Обрезаем пробелы в начале и в конце
+    return text.trim();
 }
 
 document.getElementById("genBtn").onclick = async function() {
     var btn = this;
     var resultDiv = document.getElementById("result");
     
-    // Блокируем кнопку, чтобы не было ошибки 429 (слишком много запросов)
     btn.disabled = true;
     btn.innerText = "Генерирую... (подождите 15 сек)";
-    resultDiv.innerText = "Нейросеть придумывает сценарий...";
+    resultDiv.innerText = "Анализирую базу и придумываю сценарий...";
     
     var holiday = document.getElementById("holiday").value;
     var classFrom = parseInt(document.getElementById("classFrom").value);
@@ -74,17 +89,44 @@ document.getElementById("genBtn").onclick = async function() {
     if (classFrom > classTo) { var t = classFrom; classFrom = classTo; classTo = t; }
     var classDescription = (classFrom === classTo) ? (classFrom + " класс") : ("классы с " + classFrom + " по " + classTo);
 
-    var prompt = "Ты — школьный учитель. Напиши интересный сценарий праздника '" + holiday + "' для " + classDescription + ". Сделай его связным, с играми и конкурсами. Не придумывай названия песен. Пиши только на русском.";
-
-    var zaiKey = "4afa4a4d39614b6fa7513a65c6a56166.q1j4llhJlKjaSyka"; 
-
-    var requestBody = {
-        model: "glm-4.5-flash", // Самая стабильная бесплатная модель
-        messages: [{ role: "user", content: prompt }],
-        temperature: 0.7
-    };
+    var csvUrl = "https://docs.google.com/spreadsheets/d/1c0uE0lfqJLFeHzI8g1oO1qhMa5MZrwesTTEvJLL1X8/export?format=tsv&gid=0";
 
     try {
+        var csvResponse = await fetch(csvUrl);
+        var csvText = await csvResponse.text();
+        var rows = csvText.split("\n");
+        var examples = "";
+
+        for (var i = 1; i < rows.length; i++) {
+            if (!rows[i].trim()) continue;
+            var cols = rows[i].split("\t");
+            if (cols[0] && cols[0].includes(holiday)) {
+                if (cols[7] && cols[7].length > 50) {
+                    examples += "Пример сценария: " + cols[7].substring(0, 400) + "...\n\n";
+                }
+            }
+            if (examples.length > 1500) break; 
+        }
+
+        if (examples === "") examples = "В базе нет точных примеров. Придумай сам.";
+
+        // СТРОГИЙ ПРОМПТ
+        var prompt = "Ты — опытный школьный методист. Напиши сценарий праздника '" + holiday + "' для " + classDescription + ".\n\n" +
+        "КРИТИЧЕСКИ ВАЖНЫЕ ПРАВИЛА:\n" +
+        "1. НЕ пиши никаких вступлений от себя! Никаких 'Привет', 'Конечно, я помогу' и т.д. Начинай ответ СРАЗУ с названия сценария или первого конкурса.\n" +
+        "2. ЗАПРЕЩЕНО использовать символы Markdown (никаких *, #, ---). Пиши обычным текстом. Для выделения этапов используй просто цифры (1, 2, 3) или дефисы (-).\n" +
+        "3. Никакого черного юмора, шуток про оценки или сарказма. Только добрый школьный формат!\n" +
+        "4. Опирайся на стиль этих примеров из моей базы:\n" + examples + "\n" +
+        "5. Пиши только на русском языке, без ошибок.";
+
+        var zaiKey = "4afa4a4d39614b6fa7513a65c6a56166.q1j4llhJlKjaSyka"; 
+        
+        var requestBody = {
+            model: "glm-4.5-flash", 
+            messages: [{ role: "user", content: prompt }],
+            temperature: 0.7
+        };
+
         var response = await fetch("https://api.z.ai/api/paas/v4/chat/completions", {
             method: "POST",
             headers: {
@@ -94,9 +136,7 @@ document.getElementById("genBtn").onclick = async function() {
             body: JSON.stringify(requestBody)
         });
 
-        if (!response.ok) {
-            throw new Error("Код ошибки: " + response.status);
-        }
+        if (!response.ok) throw new Error("Код ошибки: " + response.status);
 
         var data = await response.json();
         resultDiv.innerText = cleanText(data.choices[0].message.content);
@@ -104,7 +144,6 @@ document.getElementById("genBtn").onclick = async function() {
     } catch (error) {
         resultDiv.innerText = "Ошибка: " + error.message + "\n\nЕсли ошибка 429 — подождите 2-3 минуты и попробуйте снова.";
     } finally {
-        // Возвращаем кнопку обратно
         btn.disabled = false;
         btn.innerText = "Сгенерировать мероприятие";
     }
