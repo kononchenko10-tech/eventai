@@ -8,14 +8,10 @@
         .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
         h2 { text-align: center; color: #333; }
         label { display: block; margin-top: 15px; font-weight: bold; }
-        select, button, input[type="checkbox"] { margin-top: 5px; }
-        select { width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #ccc; font-size: 16px; }
-        .row { display: flex; gap: 10px; }
-        .col { flex: 1; }
-        .checkbox-group { margin-top: 15px; padding: 15px; background: #f0f8ff; border: 1px solid #b0d4f1; border-radius: 5px; }
-        .checkbox-group label { font-weight: normal; display: flex; align-items: center; gap: 8px; margin-top: 8px; }
-        button { width: 100%; padding: 12px; background: #4CAF50; color: white; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; margin-top: 20px; }
+        select, button { width: 100%; padding: 10px; margin-top: 5px; border-radius: 4px; border: 1px solid #ccc; font-size: 16px; }
+        button { background: #4CAF50; color: white; border: none; cursor: pointer; margin-top: 20px; font-weight: bold; }
         button:hover { background: #45a049; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
         #result { margin-top: 20px; padding: 15px; background: #f9f9f9; border-radius: 5px; min-height: 100px; white-space: pre-wrap; line-height: 1.5; }
     </style>
 </head>
@@ -30,11 +26,10 @@
         <option value="1 сентября">1 сентября</option>
         <option value="День учителя">День учителя</option>
         <option value="8 марта">8 марта</option>
-        <option value="День космонавтики">День космонавтики</option>
     </select>
 
-    <div class="row" style="margin-top: 15px;">
-        <div class="col">
+    <div style="display: flex; gap: 10px; margin-top: 15px;">
+        <div style="flex: 1;">
             <label>От класса:</label>
             <select id="classFrom">
                 <option value="1">1</option><option value="2">2</option><option value="3">3</option>
@@ -43,7 +38,7 @@
                 <option value="10">10</option><option value="11">11</option>
             </select>
         </div>
-        <div class="col">
+        <div style="flex: 1;">
             <label>До класса:</label>
             <select id="classTo">
                 <option value="1">1</option><option value="2">2</option><option value="3">3</option>
@@ -54,103 +49,65 @@
         </div>
     </div>
 
-    <label style="margin-top: 15px;">Формат:</label>
-    <select id="format">
-        <option value="short">Краткий план</option>
-        <option value="detailed">Подробный с репликами</option>
-    </select>
-
-    <div class="checkbox-group">
-        <p style="font-weight: bold; margin-top: 0;">Что можно использовать?</p>
-        <label><input type="checkbox" id="useMobile"> Мобильные устройства</label>
-        <label><input type="checkbox" id="useQR"> QR-коды</label>
-        <label><input type="checkbox" id="useQuiz"> Онлайн-квизы</label>
-    </div>
-
     <button id="genBtn">Сгенерировать мероприятие</button>
     <div id="result">Здесь появится сценарий...</div>
 </div>
 
 <script>
 function cleanText(inputText) {
-    var lines = inputText.split("\n");
-    var cleaned = [];
-    for (var i = 0; i < lines.length; i++) {
-        var line = lines[i];
-        if (/^[\s\|\-\+]+$/.test(line)) continue;
-        if (line.indexOf("|") !== -1) {
-            line = line.replace(/\|/g, "  ").replace(/\s+/g, " ").trim();
-            if (line === "") continue;
-        }
-        line = line.replace(/\*\*/g, "").replace(/##/g, "").replace(/---/g, "");
-        line = line.replace(/#{1,6}\s/g, "").replace(/^\s*\*\s/g, "- ");
-        cleaned.push(line);
-    }
-    return cleaned.join("\n").replace(/\n{3,}/g, "\n\n");
+    return inputText.replace(/\*\*/g, "").replace(/##/g, "").replace(/\|/g, " ").replace(/\n{3,}/g, "\n\n");
 }
 
-document.getElementById("genBtn").onclick = function() {
+document.getElementById("genBtn").onclick = async function() {
+    var btn = this;
+    var resultDiv = document.getElementById("result");
+    
+    // Блокируем кнопку, чтобы не было ошибки 429 (слишком много запросов)
+    btn.disabled = true;
+    btn.innerText = "Генерирую... (подождите 15 сек)";
+    resultDiv.innerText = "Нейросеть придумывает сценарий...";
+    
     var holiday = document.getElementById("holiday").value;
     var classFrom = parseInt(document.getElementById("classFrom").value);
     var classTo = parseInt(document.getElementById("classTo").value);
-    var format = document.getElementById("format").value;
-    var useMobile = document.getElementById("useMobile").checked;
-    var useQR = document.getElementById("useQR").checked;
-    var useQuiz = document.getElementById("useQuiz").checked;
-    
-    var resultDiv = document.getElementById("result");
-    resultDiv.innerText = "Генерирую сценарий через нейросеть... (20-30 сек)";
     
     if (classFrom > classTo) { var t = classFrom; classFrom = classTo; classTo = t; }
-    
     var classDescription = (classFrom === classTo) ? (classFrom + " класс") : ("классы с " + classFrom + " по " + classTo);
 
-    // ФОРМИРУЕМ ЗАПРОС
-    var formatInstruction = (format === "detailed") 
-        ? "Формат: ПОДРОБНЫЙ сценарий с репликами ведущих." 
-        : "Формат: КРАТКИЙ план по этапам.";
-    
-    var techConstraints = "";
-    var allowed = [];
-    if (useMobile) allowed.push("мобильные устройства");
-    if (useQR) allowed.push("QR-коды");
-    if (useQuiz) allowed.push("онлайн-квизы");
-    if (allowed.length > 0) techConstraints = "Можно использовать: " + allowed.join(", ") + ". ";
+    var prompt = "Ты — школьный учитель. Напиши интересный сценарий праздника '" + holiday + "' для " + classDescription + ". Сделай его связным, с играми и конкурсами. Не придумывай названия песен. Пиши только на русском.";
 
-    var prompt = "Ты — школьный учитель. Напиши сценарий праздника '" + holiday + "' для " + classDescription + ". " +
-        formatInstruction + " " + techConstraints + " Не придумывай названия песен. Пиши только на русском.";
+    var zaiKey = "4afa4a4d39614b6fa7513a65c6a56166.q1j4llhJlKjaSyka"; 
 
-    // ===== ТВОИ ДАННЫЕ =====
-    var csvUrl = "https://docs.google.com/spreadsheets/d/1c0uE0lfqJLFeHzI8g1oO1qhMa5MZrwesTTEvJLL1X8/export?format=tsv&gid=0"; // Вставь верхнюю ссылку из блокнота
-    var zaiKey = "4afa4a4d39614b6fa7513a65c6a56166.q1j4llhJlKjaSyka"; // Вставь нижнюю строку (ключ) из блокнота
-    // =======================
-
-    // Отправляем запрос в Z.ai
-   var requestBody = {
-    model: "glm-4-flash", 
-    messages: [{ role: "user", content: prompt }]
-};
+    var requestBody = {
+        model: "glm-4-flash", // Самая стабильная бесплатная модель
+        messages: [{ role: "user", content: prompt }],
+        temperature: 0.7
     };
 
-    fetch("https://api.z.ai/api/paas/v4/chat/completions", {
-        method: "POST",
-        headers: {
-            "Authorization": "Bearer " + zaiKey,
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify(requestBody)
-    })
-    .then(function(resp) {
-        if (!resp.ok) throw new Error("Ошибка Z.ai: " + resp.status);
-        return resp.json();
-    })
-    .then(function(data) {
-        var text = data.choices[0].message.content;
-        resultDiv.innerText = cleanText(text);
-    })
-    .catch(function(e) {
-        resultDiv.innerText = "Ошибка: " + e.message;
-    });
+    try {
+        var response = await fetch("https://api.z.ai/api/paas/v4/chat/completions", {
+            method: "POST",
+            headers: {
+                "Authorization": "Bearer " + zaiKey,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(requestBody)
+        });
+
+        if (!response.ok) {
+            throw new Error("Код ошибки: " + response.status);
+        }
+
+        var data = await response.json();
+        resultDiv.innerText = cleanText(data.choices[0].message.content);
+        
+    } catch (error) {
+        resultDiv.innerText = "Ошибка: " + error.message + "\n\nЕсли ошибка 429 — подождите 2-3 минуты и попробуйте снова.";
+    } finally {
+        // Возвращаем кнопку обратно
+        btn.disabled = false;
+        btn.innerText = "Сгенерировать мероприятие";
+    }
 };
 </script>
 
