@@ -4,20 +4,149 @@
     <meta charset="UTF-8">
     <title>EventAI - Генератор мероприятий</title>
     <style>
-        body { font-family: Arial, sans-serif; background: #f4f7f6; padding: 20px; }
-        .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        h2 { text-align: center; color: #333; }
-        label { display: block; margin-top: 15px; font-weight: bold; font-size: 14px; }
-        select, button, input[type="checkbox"] { margin-top: 5px; }
-        select { width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #ccc; font-size: 15px; }
-        .row { display: flex; gap: 10px; margin-top: 10px; }
-        .col { flex: 1; }
-        .checkbox-group { margin-top: 15px; padding: 15px; background: #f0f8ff; border: 1px solid #b0d4f1; border-radius: 5px; }
-        .checkbox-group label { font-weight: normal; display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 15px; cursor: pointer; }
-        button { width: 100%; padding: 12px; background: #4CAF50; color: white; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; margin-top: 20px; font-weight: bold; }
-        button:hover { background: #45a049; }
-        button:disabled { background: #ccc; cursor: not-allowed; }
-        #result { margin-top: 20px; padding: 15px; background: #f9f9f9; border-radius: 5px; min-height: 100px; white-space: pre-wrap; line-height: 1.5; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+
+        body { 
+            font-family: 'Inter', sans-serif; 
+            /* Фон: картинка + зеленоватый фильтр. Если захочешь свою картинку, замени ссылку в url() */
+            background: linear-gradient(rgba(200, 235, 210, 0.85), rgba(160, 215, 170, 0.9)), 
+                        url('https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=2070&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            padding: 40px 20px; 
+            margin: 0;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        .container { 
+            max-width: 650px; 
+            margin: 0 auto; 
+            background: white; 
+            padding: 30px; 
+            border-radius: 16px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1); 
+        }
+
+        h2 { 
+            text-align: center; 
+            color: #1a1a1a; 
+            font-size: 24px;
+            margin-bottom: 25px;
+        }
+
+        label { 
+            display: block; 
+            margin-top: 15px; 
+            font-weight: 500; 
+            font-size: 14px; 
+            color: #4a4a4a;
+        }
+
+        select, button, input[type="checkbox"] { 
+            margin-top: 6px; 
+        }
+
+        select { 
+            width: 100%; 
+            padding: 12px; 
+            border-radius: 8px; 
+            border: 1px solid #e0e0e0; 
+            font-size: 15px; 
+            background-color: #fafafa;
+            outline: none;
+            transition: border-color 0.2s;
+            box-sizing: border-box;
+        }
+
+        select:focus {
+            border-color: #4CAF50;
+            background-color: #fff;
+        }
+
+        .row { 
+            display: flex; 
+            gap: 15px; 
+            margin-top: 10px; 
+        }
+
+        .col { 
+            flex: 1; 
+        }
+
+        .checkbox-group { 
+            margin-top: 20px; 
+            padding: 15px; 
+            background: #f8fdf9; 
+            border: 1px solid #d1e7dd; 
+            border-radius: 8px; 
+        }
+
+        .checkbox-group p { 
+            font-weight: 600; 
+            margin-top: 0; 
+            color: #1a1a1a;
+            font-size: 15px;
+        }
+
+        .checkbox-group label { 
+            font-weight: 400; 
+            display: flex; 
+            align-items: center; 
+            gap: 10px; 
+            margin-top: 8px; 
+            font-size: 14px; 
+            cursor: pointer; 
+            color: #333;
+        }
+
+        input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: #4CAF50;
+            cursor: pointer;
+        }
+
+        button { 
+            width: 100%; 
+            padding: 14px; 
+            background: #4CAF50; 
+            color: white; 
+            border: none; 
+            border-radius: 8px; 
+            font-size: 16px; 
+            font-weight: 600;
+            cursor: pointer; 
+            margin-top: 25px; 
+            transition: background 0.2s, transform 0.1s;
+            box-shadow: 0 4px 10px rgba(76, 175, 80, 0.2);
+        }
+
+        button:hover { 
+            background: #43a047; 
+            transform: translateY(-1px);
+        }
+
+        button:disabled { 
+            background: #cccccc; 
+            cursor: not-allowed; 
+            box-shadow: none;
+            transform: none;
+        }
+
+        #result { 
+            margin-top: 25px; 
+            padding: 20px; 
+            background: #fdfdfd; 
+            border: 1px solid #eeeeee; 
+            border-radius: 8px; 
+            min-height: 100px; 
+            white-space: pre-wrap; 
+            line-height: 1.6; 
+            color: #333;
+            font-size: 15px;
+        }
     </style>
 </head>
 <body>
@@ -82,12 +211,12 @@
 
     <!-- Объединенная галочка -->
     <div class="checkbox-group">
-        <p style="font-weight: bold; margin-top: 0;">Использовать цифровые технологии?</p>
+        <p>Использовать цифровые технологии?</p>
         <label>
             <input type="checkbox" id="useTech"> 
             Да, использовать (мобильные устройства, QR-коды, онлайн-квизы)
         </label>
-        <p style="font-size: 12px; color: #666; margin-top: 5px; margin-bottom: 0;">Если галочка не стоит, бот придумает только офлайн-игры без телефонов.</p>
+        <p style="font-size: 12px; color: #666; margin-top: 5px; margin-bottom: 0; font-weight: normal;">Если галочка не стоит, бот придумает только офлайн-игры без телефонов.</p>
     </div>
 
     <button id="genBtn">Сгенерировать мероприятие</button>
@@ -128,7 +257,7 @@ document.getElementById("genBtn").onclick = async function() {
     var duration = document.getElementById("duration").value;
     var budget = document.getElementById("budget").value;
     var format = document.getElementById("format").value;
-    var useTech = document.getElementById("useTech").checked; // Одна галочка на все технологии
+    var useTech = document.getElementById("useTech").checked;
     
     if (classFrom > classTo) { var t = classFrom; classFrom = classTo; classTo = t; }
     var classDescription = (classFrom === classTo) ? (classFrom + " класс") : ("классы с " + classFrom + " по " + classTo);
@@ -164,7 +293,6 @@ document.getElementById("genBtn").onclick = async function() {
             ? "Формат: ПОДРОБНЫЙ сценарий с репликами ведущих, диалогами и описанием действий." 
             : "Формат: КРАТКИЙ план по этапам (только тезисы и названия конкурсов).";
         
-        // Логика для технологий
         var techConstraints = "";
         if (useTech) {
             techConstraints = "ОБЯЗАТЕЛЬНО включи в сценарий хотя бы один конкурс с использованием цифровых технологий (мобильные устройства, QR-коды или онлайн-квизы). Это обязательное требование!";
@@ -216,4 +344,5 @@ document.getElementById("genBtn").onclick = async function() {
 </script>
 
 </body>
+</html>
 </html>
