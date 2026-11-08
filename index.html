@@ -126,11 +126,10 @@ document.getElementById("genBtn").onclick = function() {
     // =======================
 
     // Отправляем запрос в Z.ai
-    var requestBody = {
-        model: "glm-5.3-flash", 
-        messages: [{ role: "user", content: prompt }],
-        temperature: 0.6,
-        stream: false
+   var requestBody = {
+    model: "glm-4-flash", 
+    messages: [{ role: "user", content: prompt }]
+};
     };
 
     fetch("https://api.z.ai/api/paas/v4/chat/completions", {
