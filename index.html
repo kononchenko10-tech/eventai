@@ -1,159 +1,69 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <title>EventAI - Генератор мероприятий</title>
-    <style>
-        body { font-family: Arial, sans-serif; background: #f4f7f6; padding: 20px; }
-        .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        h2 { text-align: center; color: #333; }
-        label { display: block; margin-top: 15px; font-weight: bold; }
-        select, button, input[type="checkbox"] { margin-top: 5px; }
-        select { width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #ccc; font-size: 16px; }
-        .row { display: flex; gap: 10px; }
-        .col { flex: 1; }
-        .checkbox-group { margin-top: 15px; padding: 15px; background: #f0f8ff; border: 1px solid #b0d4f1; border-radius: 5px; }
-        .checkbox-group label { font-weight: normal; display: flex; align-items: center; gap: 8px; margin-top: 8px; }
-        button { width: 100%; padding: 12px; background: #4CAF50; color: white; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; margin-top: 20px; }
-        button:hover { background: #45a049; }
-        #result { margin-top: 20px; padding: 15px; background: #f9f9f9; border-radius: 5px; min-height: 100px; white-space: pre-wrap; line-height: 1.5; }
-    </style>
-</head>
-<body>
-
-<div class="container">
-    <h2>Генератор мероприятий</h2>
-    
-    <label>Праздник:</label>
-    <select id="holiday">
-        <option value="Новый год">Новый год</option>
-        <option value="1 сентября">1 сентября</option>
-        <option value="День учителя">День учителя</option>
-        <option value="8 марта">8 марта</option>
-        <option value="День космонавтики">День космонавтики</option>
-    </select>
-
-    <div class="row" style="margin-top: 15px;">
-        <div class="col">
-            <label>От класса:</label>
-            <select id="classFrom">
-                <option value="1">1</option><option value="2">2</option><option value="3">3</option>
-                <option value="4">4</option><option value="5">5</option><option value="6">6</option>
-                <option value="7">7</option><option value="8">8</option><option value="9">9</option>
-                <option value="10">10</option><option value="11">11</option>
-            </select>
-        </div>
-        <div class="col">
-            <label>До класса:</label>
-            <select id="classTo">
-                <option value="1">1</option><option value="2">2</option><option value="3">3</option>
-                <option value="4">4</option><option value="5">5</option><option value="6">6</option>
-                <option value="7">7</option><option value="8">8</option><option value="9">9</option>
-                <option value="10">10</option><option value="11" selected>11</option>
-            </select>
-        </div>
-    </div>
-
-    <label style="margin-top: 15px;">Формат:</label>
-    <select id="format">
-        <option value="short">Краткий план</option>
-        <option value="detailed">Подробный с репликами</option>
-    </select>
-
-    <div class="checkbox-group">
-        <p style="font-weight: bold; margin-top: 0;">Что можно использовать?</p>
-        <label><input type="checkbox" id="useMobile"> Мобильные устройства</label>
-        <label><input type="checkbox" id="useQR"> QR-коды</label>
-        <label><input type="checkbox" id="useQuiz"> Онлайн-квизы</label>
-    </div>
-
-    <button id="genBtn">Сгенерировать мероприятие</button>
-    <div id="result">Здесь появится сценарий...</div>
-</div>
-
-<!-- Скрытый iframe для приема ответа от Cloudflare -->
-<iframe name="responseFrame" id="responseFrame" style="display:none;"></iframe>
-
-<script>
-function cleanText(inputText) {
-    var lines = inputText.split("\n");
-    var cleaned = [];
-    for (var i = 0; i < lines.length; i++) {
-        var line = lines[i];
-        if (/^[\s\|\-\+]+$/.test(line)) continue;
-        if (line.indexOf("|") !== -1) {
-            line = line.replace(/\|/g, "  ").replace(/\s+/g, " ").trim();
-            if (line === "") continue;
-        }
-        line = line.replace(/\*\*/g, "").replace(/##/g, "").replace(/---/g, "");
-        line = line.replace(/#{1,6}\s/g, "").replace(/^\s*\*\s/g, "- ");
-        cleaned.push(line);
-    }
-    return cleaned.join("\n").replace(/\n{3,}/g, "\n\n");
-}
-
 document.getElementById("genBtn").onclick = function() {
     var holiday = document.getElementById("holiday").value;
     var classFrom = parseInt(document.getElementById("classFrom").value);
-    var classTo = parseInt(document.getElementById("classTo").value);
-    var format = document.getElementById("format").value;
-    var useMobile = document.getElementById("useMobile").checked;
-    var useQR = document.getElementById("useQR").checked;
-    var useQuiz = document.getElementById("useQuiz").checked;
-    
     var resultDiv = document.getElementById("result");
-    resultDiv.innerText = "Генерирую... Подождите 20-30 секунд.";
     
-    if (classFrom > classTo) { var t = classFrom; classFrom = classTo; classTo = t; }
+    resultDiv.innerText = "Собираю новый сценарий...";
     
-    // ССЫЛКА НА ТВОЙ CLOUDFLARE WORKER
-    var proxyUrl = "https://eventai.kononchenko10.workers.dev/"; 
-
-    var classDescription = (classFrom === classTo) ? (classFrom + " класс") : ("классы с " + classFrom + " по " + classTo);
-
-    var formatInstruction = (format === "detailed") 
-        ? "Формат: ПОДРОБНЫЙ сценарий с репликами ведущих." 
-        : "Формат: КРАТКИЙ план по этапам.";
+    var csvUrl = "https://docs.google.com/spreadsheets/d/1c0uE0lfqJLFeHzI8g1oO1qhMa5MZrwesTTEvJLL1X8/export?format=tsv&gid=0";
     
-    var techConstraints = "";
-    var allowed = [];
-    if (useMobile) allowed.push("мобильные устройства");
-    if (useQR) allowed.push("QR-коды");
-    if (useQuiz) allowed.push("онлайн-квизы");
-    if (allowed.length > 0) techConstraints = "Можно использовать: " + allowed.join(", ") + ". ";
-
-    var prompt = "Ты — школьный учитель. Напиши сценарий праздника '" + holiday + "' для " + classDescription + ". " +
-        formatInstruction + " " + techConstraints + " Не придумывай названия песен. Пиши только на русском.";
-
-    // Создаем форму и отправляем её в iframe
-    var form = document.createElement("form");
-    form.method = "POST";
-    form.action = proxyUrl;
-    form.target = "responseFrame";
-
-    var input = document.createElement("input");
-    input.type = "hidden";
-    input.name = "prompt";
-    input.value = prompt;
-    form.appendChild(input);
-
-    document.body.appendChild(form);
-    form.submit();
-    document.body.removeChild(form);
-
-    // Слушаем ответ от iframe
-    var iframe = document.getElementById("responseFrame");
-    iframe.onload = function() {
-        try {
-            var content = iframe.contentDocument.body.innerText;
-            var data = JSON.parse(content);
-            resultDiv.innerText = cleanText(data.result);
-        } catch (e) {
-            resultDiv.innerText = "Ошибка: не удалось прочитать ответ. Попробуйте ещё раз.";
+    fetch(csvUrl)
+    .then(function(r) { return r.text(); })
+    .then(function(csvText) {
+        var rows = csvText.split("\n");
+        var scripts = [];
+        
+        // 1. Ищем все подходящие сценарии
+        for (var i = 1; i < rows.length; i++) {
+            if (!rows[i].trim()) continue;
+            var cols = rows[i].split(",");
+            if (cols[0] && cols[0].includes(holiday)) {
+                var dbNum = parseInt(cols[1] || "");
+                if (!isNaN(dbNum) && dbNum >= classFrom && dbNum <= classFrom + 3) {
+                    if (cols[7] && cols[7].length > 50) {
+                        scripts.push(cols[7].replace(/;/g, ","));
+                    }
+                }
+            }
         }
-    };
-};
-</script>
+        
+        if (scripts.length < 2) {
+            resultDiv.innerText = "Для сборки нужно минимум 2 сценария. Добавьте больше данных в таблицу.";
+            return;
+        }
 
-</body>
-</html>
+        // 2. Разбираем на части и перемешиваем
+        var allParagraphs = [];
+        scripts.forEach(function(text) {
+            // Делим на абзацы
+            var parts = text.split(/\n\n|\n/);
+            parts.forEach(function(p) { if (p.trim().length > 30) allParagraphs.push(p.trim()); });
+        });
+
+        // Перемешиваем абзацы
+        allParagraphs.sort(function() { return 0.5 - Math.random(); });
+
+        // 3. Собираем новый сценарий
+        var finalText = "✨ Сгенерирован новый уникальный сценарий:\n\n";
+        
+        finalText += "--- ВСТУПЛЕНИЕ ---\n";
+        finalText += allParagraphs[0] + "\n\n";
+        
+        finalText += "А теперь давайте поиграем и посоревнуемся!\n\n";
+        
+        finalText += "--- КОНКУРСЫ ---\n";
+        var contestCount = Math.min(3, allParagraphs.length - 2);
+        for (var i = 1; i <= contestCount; i++) {
+            finalText += "• " + allParagraphs[i] + "\n\n";
+        }
+        
+        finalText += "--- ФИНАЛ ---\n";
+        finalText += "Наш праздник подходит к концу. Спасибо всем за участие!\n";
+        finalText += allParagraphs[allParagraphs.length - 1];
+
+        resultDiv.innerText = finalText;
+    })
+    .catch(function(e) {
+        resultDiv.innerText = "Ошибка загрузки базы: " + e.message;
+    });
+};
