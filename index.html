@@ -8,7 +8,6 @@
 
         body { 
             font-family: 'Inter', sans-serif; 
-            /* Фон: картинка + зеленоватый фильтр. Если захочешь свою картинку, замени ссылку в url() */
             background: linear-gradient(rgba(200, 235, 210, 0.85), rgba(160, 215, 170, 0.9)), 
                         url('https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=2070&auto=format&fit=crop');
             background-size: cover;
@@ -44,9 +43,7 @@
             color: #4a4a4a;
         }
 
-        select, button, input[type="checkbox"] { 
-            margin-top: 6px; 
-        }
+        select, button, input[type="checkbox"] { margin-top: 6px; }
 
         select { 
             width: 100%; 
@@ -60,20 +57,10 @@
             box-sizing: border-box;
         }
 
-        select:focus {
-            border-color: #4CAF50;
-            background-color: #fff;
-        }
+        select:focus { border-color: #4CAF50; background-color: #fff; }
 
-        .row { 
-            display: flex; 
-            gap: 15px; 
-            margin-top: 10px; 
-        }
-
-        .col { 
-            flex: 1; 
-        }
+        .row { display: flex; gap: 15px; margin-top: 10px; }
+        .col { flex: 1; }
 
         .checkbox-group { 
             margin-top: 20px; 
@@ -83,69 +70,29 @@
             border-radius: 8px; 
         }
 
-        .checkbox-group p { 
-            font-weight: 600; 
-            margin-top: 0; 
-            color: #1a1a1a;
-            font-size: 15px;
-        }
+        .checkbox-group p { font-weight: 600; margin-top: 0; color: #1a1a1a; font-size: 15px; }
 
         .checkbox-group label { 
-            font-weight: 400; 
-            display: flex; 
-            align-items: center; 
-            gap: 10px; 
-            margin-top: 8px; 
-            font-size: 14px; 
-            cursor: pointer; 
-            color: #333;
+            font-weight: 400; display: flex; align-items: center; gap: 10px; 
+            margin-top: 8px; font-size: 14px; cursor: pointer; color: #333;
         }
 
-        input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
-            accent-color: #4CAF50;
-            cursor: pointer;
-        }
+        input[type="checkbox"] { width: 18px; height: 18px; accent-color: #4CAF50; cursor: pointer; }
 
         button { 
-            width: 100%; 
-            padding: 14px; 
-            background: #4CAF50; 
-            color: white; 
-            border: none; 
-            border-radius: 8px; 
-            font-size: 16px; 
-            font-weight: 600;
-            cursor: pointer; 
-            margin-top: 25px; 
-            transition: background 0.2s, transform 0.1s;
+            width: 100%; padding: 14px; background: #4CAF50; color: white; 
+            border: none; border-radius: 8px; font-size: 16px; font-weight: 600;
+            cursor: pointer; margin-top: 25px; transition: background 0.2s, transform 0.1s;
             box-shadow: 0 4px 10px rgba(76, 175, 80, 0.2);
         }
 
-        button:hover { 
-            background: #43a047; 
-            transform: translateY(-1px);
-        }
-
-        button:disabled { 
-            background: #cccccc; 
-            cursor: not-allowed; 
-            box-shadow: none;
-            transform: none;
-        }
+        button:hover { background: #43a047; transform: translateY(-1px); }
+        button:disabled { background: #cccccc; cursor: not-allowed; box-shadow: none; transform: none; }
 
         #result { 
-            margin-top: 25px; 
-            padding: 20px; 
-            background: #fdfdfd; 
-            border: 1px solid #eeeeee; 
-            border-radius: 8px; 
-            min-height: 100px; 
-            white-space: pre-wrap; 
-            line-height: 1.6; 
-            color: #333;
-            font-size: 15px;
+            margin-top: 25px; padding: 20px; background: #fdfdfd; 
+            border: 1px solid #eeeeee; border-radius: 8px; min-height: 100px; 
+            white-space: pre-wrap; line-height: 1.6; color: #333; font-size: 15px;
         }
     </style>
 </head>
@@ -209,7 +156,6 @@
         <option value="detailed" selected>Подробный с диалогами</option>
     </select>
 
-    <!-- Объединенная галочка -->
     <div class="checkbox-group">
         <p>Использовать цифровые технологии?</p>
         <label>
@@ -224,21 +170,12 @@
 </div>
 
 <script>
-// УМНАЯ ОЧИСТКА ТЕКСТА
 function cleanText(inputText) {
     var text = inputText;
-    
-    // Убираем markdown-символы
     text = text.replace(/\*\*/g, "").replace(/#/g, "").replace(/\|/g, " ").replace(/---/g, "");
-    
-    // Вырезаем типичные вступления
     text = text.replace(/^(Отлично!|Конечно!|Здравствуйте!|Привет!)[^\n]*\n+/i, "");
     text = text.replace(/^(Вот ваш|Вот сценарий|Я подготовил)[^\n]*\n+/i, "");
-    
-    // Вырезаем типичные концовки
     text = text.replace(/\n+(Этот сценарий дает|Этот сценарий поможет|Надеюсь, этот сценарий|Удачи в организации)[\s\S]*$/i, "");
-    
-    // Убираем лишние пустые строки и пробелы
     text = text.replace(/\n{3,}/g, "\n\n");
     return text.trim();
 }
@@ -265,12 +202,12 @@ document.getElementById("genBtn").onclick = async function() {
     var csvUrl = "https://docs.google.com/spreadsheets/d/1c0uE0lfqJLFeHzI8g1oO1qhMa5MZrwesTTEvJLL1X8/export?format=tsv&gid=0";
 
     try {
-        // 1. Загружаем примеры из таблицы
         var csvResponse = await fetch(csvUrl);
         var csvText = await csvResponse.text();
         var rows = csvText.split("\n");
-        var examples = "";
-
+        
+        // 1. СБОР ВСЕХ ПОДХОДЯЩИХ СЦЕНАРИЕВ (в массив)
+        var validScripts = [];
         for (var i = 1; i < rows.length; i++) {
             if (!rows[i].trim()) continue;
             var cols = rows[i].split("\t");
@@ -279,39 +216,47 @@ document.getElementById("genBtn").onclick = async function() {
                 var dbNum = parseInt(cols[1] || "");
                 if (!isNaN(dbNum) && dbNum >= classFrom && dbNum <= classTo) {
                     if (cols[7] && cols[7].length > 50) {
-                        examples += "Пример: " + cols[7].substring(0, 300) + "...\n\n";
+                        validScripts.push(cols[7]); // Сохраняем только текст
                     }
                 }
             }
-            if (examples.length > 1500) break; 
         }
         
-        if (examples === "") examples = "В базе нет точных примеров для этих параметров. Придумай сам.";
+        // 2. РАНДОМИЗАЦИЯ (Перемешиваем массив)
+        validScripts.sort(function() { return 0.5 - Math.random(); });
 
-        // 2. Формируем инструкции
+        // 3. БЕРЕМ 2 СЛУЧАЙНЫХ СЦЕНАРИЯ И ОБРЕЗАЕМ ИХ
+        var examples = "";
+        var takeCount = Math.min(2, validScripts.length); // Берем максимум 2 штуки
+        for (var j = 0; j < takeCount; j++) {
+            examples += "Пример: " + validScripts[j].substring(0, 500) + "...\n\n";
+        }
+        
+        if (examples === "") examples = "В базе нет точных примеров. Придумай сам.";
+
+        // 4. Инструкции для нейросети
         var formatInstruction = (format === "detailed") 
             ? "Формат: ПОДРОБНЫЙ сценарий с репликами ведущих, диалогами и описанием действий." 
             : "Формат: КРАТКИЙ план по этапам (только тезисы и названия конкурсов).";
         
         var techConstraints = "";
         if (useTech) {
-            techConstraints = "ОБЯЗАТЕЛЬНО включи в сценарий хотя бы один конкурс с использованием цифровых технологий (мобильные устройства, QR-коды или онлайн-квизы). Это обязательное требование!";
+            techConstraints = "ОБЯЗАТЕЛЬНО включи в сценарий хотя бы один конкурс с использованием цифровых технологий (мобильные устройства, QR-коды или онлайн-квизы).";
         } else {
-            techConstraints = "КАТЕГОРИЧЕСКИ ЗАПРЕЩЕНО использовать любые цифровые технологии (мобильные устройства, QR-коды, онлайн-квизы). Придумай только офлайн-игры и живое общение.";
+            techConstraints = "КАТЕГОРИЧЕСКИ ЗАПРЕЩЕНО использовать любые цифровые технологии (мобильные устройства, QR-коды, онлайн-квизы). Только офлайн-игры.";
         }
 
-        // 3. Строгий промпт
         var prompt = "Ты — опытный школьный методист. Напиши сценарий праздника '" + holiday + "' для " + classDescription + ".\n" +
         "ПАРАМЕТРЫ: Длительность — " + duration + ", Бюджет — " + budget + ".\n\n" +
         "КРИТИЧЕСКИ ВАЖНЫЕ ПРАВИЛА:\n" +
-        "1. НЕ пиши вступления от себя! Начинай ответ СРАЗУ с заголовка (например: 'Сценарий праздника...').\n" +
-        "2. НЕ пиши заключений и пожеланий в конце. Заканчивай последним конкурсом.\n" +
+        "1. НЕ пиши вступления от себя! Начинай ответ СРАЗУ с заголовка.\n" +
+        "2. НЕ пиши заключений и пожеланий в конце.\n" +
         "3. " + formatInstruction + "\n" +
         "4. " + techConstraints + "\n" +
         "5. Опирайся на стиль этих примеров из моей базы:\n" + examples + "\n" +
         "6. Пиши только на русском языке, без ошибок. Не используй символы ** и #.";
 
-        // 4. Запрос к Z.ai
+        // 5. Запрос к Z.ai
         var zaiKey = "4afa4a4d39614b6fa7513a65c6a56166.q1j4llhJlKjaSyka"; 
         
         var requestBody = {
@@ -344,5 +289,4 @@ document.getElementById("genBtn").onclick = async function() {
 </script>
 
 </body>
-</html>
 </html>
