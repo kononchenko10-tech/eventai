@@ -2,6 +2,8 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
+    <!-- Эта строчка нужна для правильного отображения на телефонах -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EventAI - Генератор мероприятий</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
@@ -13,7 +15,7 @@
             background-size: cover;
             background-position: center;
             background-attachment: fixed;
-            padding: 40px 20px; 
+            padding: 20px 10px; 
             margin: 0;
             min-height: 100vh;
             box-sizing: border-box;
@@ -23,16 +25,15 @@
             max-width: 650px; 
             margin: 0 auto; 
             background: white; 
-            padding: 30px; 
+            padding: 25px; 
             border-radius: 16px; 
             box-shadow: 0 10px 25px rgba(0,0,0,0.1); 
         }
 
-        h2 { 
+        h2, h3 { 
             text-align: center; 
             color: #1a1a1a; 
-            font-size: 24px;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
         }
 
         label { 
@@ -43,9 +44,9 @@
             color: #4a4a4a;
         }
 
-        select, button, input[type="checkbox"] { margin-top: 6px; }
+        select, button, input[type="checkbox"], input[type="number"], textarea { margin-top: 6px; }
 
-        select { 
+        select, input[type="number"], textarea { 
             width: 100%; 
             padding: 12px; 
             border-radius: 8px; 
@@ -55,9 +56,10 @@
             outline: none;
             transition: border-color 0.2s;
             box-sizing: border-box;
+            font-family: inherit;
         }
 
-        select:focus { border-color: #4CAF50; background-color: #fff; }
+        select:focus, input:focus, textarea:focus { border-color: #4CAF50; background-color: #fff; }
 
         .row { display: flex; gap: 15px; margin-top: 10px; }
         .col { flex: 1; }
@@ -73,11 +75,11 @@
         .checkbox-group p { font-weight: 600; margin-top: 0; color: #1a1a1a; font-size: 15px; }
 
         .checkbox-group label { 
-            font-weight: 400; display: flex; align-items: center; gap: 10px; 
+            font-weight: 400; display: flex; align-items: flex-start; gap: 10px; 
             margin-top: 8px; font-size: 14px; cursor: pointer; color: #333;
         }
 
-        input[type="checkbox"] { width: 18px; height: 18px; accent-color: #4CAF50; cursor: pointer; }
+        input[type="checkbox"] { width: 18px; height: 18px; accent-color: #4CAF50; cursor: pointer; flex-shrink: 0; margin-top: 2px;}
 
         button { 
             width: 100%; padding: 14px; background: #4CAF50; color: white; 
@@ -93,6 +95,16 @@
             margin-top: 25px; padding: 20px; background: #fdfdfd; 
             border: 1px solid #eeeeee; border-radius: 8px; min-height: 100px; 
             white-space: pre-wrap; line-height: 1.6; color: #333; font-size: 15px;
+            overflow-wrap: break-word;
+        }
+
+        .divider { margin: 40px 0 20px 0; border: 0; border-top: 1px solid #eee; }
+
+        /* Адаптивность для телефонов */
+        @media (max-width: 600px) {
+            .row { flex-direction: column; gap: 0; }
+            .container { padding: 15px; }
+            h2 { font-size: 20px; }
         }
     </style>
 </head>
@@ -160,26 +172,53 @@
         <p>Использовать цифровые технологии?</p>
         <label>
             <input type="checkbox" id="useTech"> 
-            Да, использовать (мобильные устройства, QR-коды, онлайн-квизы)
+            <span>Да, использовать (мобильные устройства, QR-коды, онлайн-квизы)</span>
         </label>
         <p style="font-size: 12px; color: #666; margin-top: 5px; margin-bottom: 0; font-weight: normal;">Если галочка не стоит, бот придумает только офлайн-игры без телефонов.</p>
     </div>
 
     <button id="genBtn">Сгенерировать мероприятие</button>
     <div id="result">Здесь появится сценарий...</div>
+
+    <!-- ==================== ФОРМА ОБРАТНОЙ СВЯЗИ ==================== -->
+    <hr class="divider">
+    
+    <h3>Предложить свой сценарий</h3>
+    <p style="font-size: 14px; color: #666; text-align: center; margin-top: -10px; margin-bottom: 20px;">Поделитесь опытом! Нейросеть проверит текст и добавит его в базу.</p>
+    
+    <label>Праздник:</label>
+    <select id="userHoliday">
+        <option value="Новый год">Новый год</option>
+        <option value="1 сентября">1 сентября</option>
+        <option value="День учителя">День учителя</option>
+        <option value="8 марта">8 марта</option>
+    </select>
+
+    <label>Класс:</label>
+    <input type="number" id="userClass" min="1" max="11" placeholder="Например, 5">
+
+    <label>Ваш текст сценария:</label>
+    <textarea id="userText" rows="4" placeholder="Вставьте сюда ваш черновик или идею..."></textarea>
+
+    <button id="submitBtn" style="background: #2196F3; box-shadow: 0 4px 10px rgba(33, 150, 243, 0.2);">Отправить на модерацию</button>
+    <div id="submitResult" style="margin-top: 15px; text-align: center; font-weight: bold;"></div>
+
 </div>
 
 <script>
+// ОЧИСТКА ТЕКСТА (Иероглифы, markdown, вступления)
 function cleanText(inputText) {
     var text = inputText;
+    text = text.replace(/[\u4E00-\u9FFF\u3040-\u30FF\uAC00-\uD7AF]/g, ""); // Иероглифы
     text = text.replace(/\*\*/g, "").replace(/#/g, "").replace(/\|/g, " ").replace(/---/g, "");
     text = text.replace(/^(Отлично!|Конечно!|Здравствуйте!|Привет!)[^\n]*\n+/i, "");
     text = text.replace(/^(Вот ваш|Вот сценарий|Я подготовил)[^\n]*\n+/i, "");
     text = text.replace(/\n+(Этот сценарий дает|Этот сценарий поможет|Надеюсь, этот сценарий|Удачи в организации)[\s\S]*$/i, "");
-    text = text.replace(/\n{3,}/g, "\n\n");
+    text = text.replace(/\s{2,}/g, " ").replace(/\n{3,}/g, "\n\n");
     return text.trim();
 }
 
+// ==================== ЛОГИКА ГЕНЕРАТОРА ====================
 document.getElementById("genBtn").onclick = async function() {
     var btn = this;
     var resultDiv = document.getElementById("result");
@@ -199,64 +238,42 @@ document.getElementById("genBtn").onclick = async function() {
     if (classFrom > classTo) { var t = classFrom; classFrom = classTo; classTo = t; }
     var classDescription = (classFrom === classTo) ? (classFrom + " класс") : ("классы с " + classFrom + " по " + classTo);
 
-    var csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRxFxO--CLQAlb0ScMXkfIorN95AF8owumPwZ0ToeJeWPdOa6JNEO8M7jyn-kgDSLA9gKfLBJLSHSWA/pub?gid=0&single=true&output=csv";
+    var csvUrl = "https://docs.google.com/spreadsheets/d/1c0uE0lfqJLFeHzI8g1oO1qhMa5MZrwesTTEvJLL1X8/export?format=tsv&gid=0";
 
     try {
         var csvResponse = await fetch(csvUrl);
         var csvText = await csvResponse.text();
         var rows = csvText.split("\n");
         
-        // 1. СБОР ВСЕХ ПОДХОДЯЩИХ СЦЕНАРИЕВ (в массив)
         var validScripts = [];
         for (var i = 1; i < rows.length; i++) {
             if (!rows[i].trim()) continue;
             var cols = rows[i].split("\t");
-            
             if (cols[0] && cols[0].includes(holiday)) {
                 var dbNum = parseInt(cols[1] || "");
                 if (!isNaN(dbNum) && dbNum >= classFrom && dbNum <= classTo) {
-                    if (cols[7] && cols[7].length > 50) {
-                        validScripts.push(cols[7]); // Сохраняем только текст
-                    }
+                    if (cols[7] && cols[7].length > 50) { validScripts.push(cols[7]); }
                 }
             }
         }
         
-        // 2. РАНДОМИЗАЦИЯ (Перемешиваем массив)
         validScripts.sort(function() { return 0.5 - Math.random(); });
 
-        // 3. БЕРЕМ 2 СЛУЧАЙНЫХ СЦЕНАРИЯ И ОБРЕЗАЕМ ИХ
         var examples = "";
-        var takeCount = Math.min(2, validScripts.length); // Берем максимум 2 штуки
+        var takeCount = Math.min(2, validScripts.length);
         for (var j = 0; j < takeCount; j++) {
             examples += "Пример: " + validScripts[j].substring(0, 500) + "...\n\n";
         }
-        
         if (examples === "") examples = "В базе нет точных примеров. Придумай сам.";
 
-        // 4. Инструкции для нейросети
-        var formatInstruction = (format === "detailed") 
-            ? "Формат: ПОДРОБНЫЙ сценарий с репликами ведущих, диалогами и описанием действий." 
-            : "Формат: КРАТКИЙ план по этапам (только тезисы и названия конкурсов).";
-        
-        var techConstraints = "";
-        if (useTech) {
-            techConstraints = "ОБЯЗАТЕЛЬНО включи в сценарий хотя бы один конкурс с использованием цифровых технологий (мобильные устройства, QR-коды или онлайн-квизы).";
-        } else {
-            techConstraints = "КАТЕГОРИЧЕСКИ ЗАПРЕЩЕНО использовать любые цифровые технологии (мобильные устройства, QR-коды, онлайн-квизы). Только офлайн-игры.";
-        }
+        var formatInstruction = (format === "detailed") ? "Формат: ПОДРОБНЫЙ сценарий с репликами ведущих." : "Формат: КРАТКИЙ план по этапам.";
+        var techConstraints = useTech ? "ОБЯЗАТЕЛЬНО включи хотя бы один конкурс с цифровыми технологиями." : "КАТЕГОРИЧЕСКИ ЗАПРЕЩЕНО использовать любые цифровые технологии. Только офлайн-игры.";
 
         var prompt = "Ты — опытный школьный методист. Напиши сценарий праздника '" + holiday + "' для " + classDescription + ".\n" +
         "ПАРАМЕТРЫ: Длительность — " + duration + ", Бюджет — " + budget + ".\n\n" +
-        "КРИТИЧЕСКИ ВАЖНЫЕ ПРАВИЛА:\n" +
-        "1. НЕ пиши вступления от себя! Начинай ответ СРАЗУ с заголовка.\n" +
-        "2. НЕ пиши заключений и пожеланий в конце.\n" +
-        "3. " + formatInstruction + "\n" +
-        "4. " + techConstraints + "\n" +
-        "5. Опирайся на стиль этих примеров из моей базы:\n" + examples + "\n" +
-        "6. Пиши только на русском языке, без ошибок. Не используй символы ** и #.";
+        "ПРАВИЛА:\n1. НЕ пиши вступления от себя! Начинай СРАЗУ с заголовка.\n2. НЕ пиши заключений.\n3. " + formatInstruction + "\n4. " + techConstraints + "\n" +
+        "5. Опирайся на стиль примеров:\n" + examples + "\n6. Пиши только на русском, без ошибок. Не используй ** и #.";
 
-        // 5. Запрос к Z.ai
         var zaiKey = "4afa4a4d39614b6fa7513a65c6a56166.q1j4llhJlKjaSyka"; 
         
         var requestBody = {
@@ -267,23 +284,67 @@ document.getElementById("genBtn").onclick = async function() {
 
         var response = await fetch("https://api.z.ai/api/paas/v4/chat/completions", {
             method: "POST",
-            headers: {
-                "Authorization": "Bearer " + zaiKey,
-                "Content-Type": "application/json"
-            },
+            headers: { "Authorization": "Bearer " + zaiKey, "Content-Type": "application/json" },
             body: JSON.stringify(requestBody)
         });
 
         if (!response.ok) throw new Error("Код ошибки: " + response.status);
-
         var data = await response.json();
         resultDiv.innerText = cleanText(data.choices[0].message.content);
         
     } catch (error) {
-        resultDiv.innerText = "Ошибка: " + error.message + "\n\nЕсли ошибка 429 — подождите 2-3 минуты и попробуйте снова.";
+        resultDiv.innerText = "Ошибка: " + error.message + "\n\nЕсли ошибка 429 — подождите 2-3 минуты.";
     } finally {
         btn.disabled = false;
         btn.innerText = "Сгенерировать мероприятие";
+    }
+};
+
+// ==================== ЛОГИКА ОТПРАВКИ СВОЕГО СЦЕНАРИЯ ====================
+document.getElementById("submitBtn").onclick = async function() {
+    var btn = this;
+    var resDiv = document.getElementById("submitResult");
+    
+    var holiday = document.getElementById("userHoliday").value;
+    var classVal = document.getElementById("userClass").value;
+    var text = document.getElementById("userText").value;
+
+    if (!text || text.length < 50) {
+        resDiv.style.color = "red";
+        resDiv.innerText = "Пожалуйста, напишите текст (минимум 50 символов).";
+        return;
+    }
+
+    btn.disabled = true;
+    btn.innerText = "Отправляю...";
+    resDiv.style.color = "#666";
+    resDiv.innerText = "Нейросеть проверяет и обрабатывает текст...";
+
+    // ВНИМАНИЕ! СЮДА НУЖНО ВСТАВИТЬ ССЫЛКУ ИЗ APPS SCRIPT (если настроили)
+    var scriptUrl = "https://script.google.com/macros/s/AKfycbwgTVaaCWgtwi8AZFZEfvOHA2J0QOaIqgyM8ouKM5C74rDCHK975rVVqsIHCDjLJKaqzA/exec"; 
+
+    try {
+        var response = await fetch(scriptUrl, {
+            method: "POST",
+            body: JSON.stringify({ holiday: holiday, classVal: classVal, text: text })
+        });
+
+        var data = await response.json();
+
+        if (data.status === "success") {
+            resDiv.style.color = "green";
+            resDiv.innerText = "Успешно! Сценарий проверен и добавлен в базу.";
+            document.getElementById("userText").value = "";
+        } else {
+            resDiv.style.color = "red";
+            resDiv.innerText = "Ошибка: " + data.message;
+        }
+    } catch (error) {
+        resDiv.style.color = "red";
+        resDiv.innerText = "Ошибка сети. Убедитесь, что скрипт Apps Script настроен.";
+    } finally {
+        btn.disabled = false;
+        btn.innerText = "Отправить на модерацию";
     }
 };
 </script>
