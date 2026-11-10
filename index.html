@@ -340,10 +340,23 @@ document.getElementById("submitBtn").onclick = async function() {
             body: JSON.stringify(requestBody)
         });
 
-        var aiJson = await aiResponse.json();
+               var aiJson = await aiResponse.json();
         var resultText = aiJson.choices[0].message.content.replace(/```json/g, "").replace(/```/g, "").trim();
         
-        var parsedData = JSON.parse(resultText);
+        var parsedData = {};
+        try {
+            // Пытаемся прочитать JSON, который выдала нейросеть
+            parsedData = JSON.parse(resultText);
+        } catch (parseError) {
+            // Если нейросеть сломала JSON, делаем заглушку (текст сохранится, но без разбора)
+            parsedData = { 
+                duration: "45 минут", 
+                format: "Мероприятие", 
+                budget: "Без бюджета", 
+                elements: "Сценарий от учителя", 
+                full_text: resultText 
+            };
+        }
 
         // ВНИМАНИЕ! ВСТАВЬ ССЫЛКУ ИЗ APPS SCRIPT СЮДА!
         var scriptUrl = "https://script.google.com/macros/s/AKfycbwgTVaaCWgtwi8AZFZEfvOHA2J0QOaIqgyM8ouKM5C74rDCHK975rVVqsIHCDjLJKaqzA/exec"; 
