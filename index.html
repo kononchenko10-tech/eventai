@@ -2,7 +2,6 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <!-- Эта строчка нужна для правильного отображения на телефонах -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EventAI - Генератор мероприятий</title>
     <style>
@@ -30,10 +29,11 @@
             box-shadow: 0 10px 25px rgba(0,0,0,0.1); 
         }
 
-        h2, h3 { 
+        h2 { 
             text-align: center; 
             color: #1a1a1a; 
-            margin-bottom: 20px;
+            font-size: 24px;
+            margin-bottom: 25px;
         }
 
         label { 
@@ -44,9 +44,9 @@
             color: #4a4a4a;
         }
 
-        select, button, input[type="checkbox"], input[type="number"], textarea { margin-top: 6px; }
+        select, button, input[type="checkbox"] { margin-top: 6px; }
 
-        select, input[type="number"], textarea { 
+        select { 
             width: 100%; 
             padding: 12px; 
             border-radius: 8px; 
@@ -56,10 +56,9 @@
             outline: none;
             transition: border-color 0.2s;
             box-sizing: border-box;
-            font-family: inherit;
         }
 
-        select:focus, input:focus, textarea:focus { border-color: #4CAF50; background-color: #fff; }
+        select:focus { border-color: #4CAF50; background-color: #fff; }
 
         .row { display: flex; gap: 15px; margin-top: 10px; }
         .col { flex: 1; }
@@ -99,6 +98,14 @@
         }
 
         .divider { margin: 40px 0 20px 0; border: 0; border-top: 1px solid #eee; }
+
+        /* Стиль для новой кнопки */
+        .btn-suggest {
+            background: #2196F3; 
+            box-shadow: 0 4px 10px rgba(33, 150, 243, 0.2);
+            margin-top: 15px;
+        }
+        .btn-suggest:hover { background: #1976D2; }
 
         /* Адаптивность для телефонов */
         @media (max-width: 600px) {
@@ -180,28 +187,13 @@
     <button id="genBtn">Сгенерировать мероприятие</button>
     <div id="result">Здесь появится сценарий...</div>
 
-    <!-- ==================== ФОРМА ОБРАТНОЙ СВЯЗИ ==================== -->
+    <!-- ==================== БЛОК С КНОПКОЙ ФОРМЫ ==================== -->
     <hr class="divider">
     
-    <h3>Предложить свой сценарий</h3>
-    <p style="font-size: 14px; color: #666; text-align: center; margin-top: -10px; margin-bottom: 20px;">Поделитесь опытом! Нейросеть проверит текст и добавит его в базу.</p>
+    <h3 style="text-align: center; color: #1a1a1a; margin-bottom: 10px;">Хотите поделиться опытом?</h3>
+    <p style="font-size: 14px; color: #666; text-align: center; margin-top: 0; margin-bottom: 10px;">Предложите свой сценарий, и нейросеть добавит его в нашу базу!</p>
     
-    <label>Праздник:</label>
-    <select id="userHoliday">
-        <option value="Новый год">Новый год</option>
-        <option value="1 сентября">1 сентября</option>
-        <option value="День учителя">День учителя</option>
-        <option value="8 марта">8 марта</option>
-    </select>
-
-    <label>Класс:</label>
-    <input type="number" id="userClass" min="1" max="11" placeholder="Например, 5">
-
-    <label>Ваш текст сценария:</label>
-    <textarea id="userText" rows="4" placeholder="Вставьте сюда ваш черновик или идею..."></textarea>
-
-    <button id="submitBtn" style="background: #2196F3; box-shadow: 0 4px 10px rgba(33, 150, 243, 0.2);">Отправить на модерацию</button>
-    <div id="submitResult" style="margin-top: 15px; text-align: center; font-weight: bold;"></div>
+    <button id="suggestBtn" class="btn-suggest">Предложить свой сценарий</button>
 
 </div>
 
@@ -300,97 +292,13 @@ document.getElementById("genBtn").onclick = async function() {
     }
 };
 
-// ==================== ЛОГИКА ОТПРАВКИ СВОЕГО СЦЕНАРИЯ ====================
-document.getElementById("submitBtn").onclick = async function() {
-    var btn = this;
-    var resDiv = document.getElementById("submitResult");
+// ==================== ЛОГИКА КНОПКИ "ПРЕДЛОЖИТЬ СЦЕНАРИЙ" ====================
+document.getElementById("suggestBtn").onclick = function() {
+    // СЮДА ВСТАВЬ ССЫЛКУ НА СВОЮ GOOGLE ФОРМУ
+    var formUrl = "https://docs.google.com/forms/d/e/1FAIpQLSfl6sLPzAjKu5_tqoEmFsZWx1LH1wPbmC1cXr76oaxVOBSI1Q/viewform?usp=dialog";
     
-    var holiday = document.getElementById("userHoliday").value;
-    var classVal = document.getElementById("userClass").value;
-    var text = document.getElementById("userText").value;
-
-    if (!text || text.length < 50) {
-        resDiv.style.color = "red";
-        resDiv.innerText = "Пожалуйста, напишите текст (минимум 50 символов).";
-        return;
-    }
-
-    btn.disabled = true;
-    btn.innerText = "Нейросеть обрабатывает...";
-    resDiv.style.color = "#666";
-    resDiv.innerText = "Проверяем текст и распределяем по колонкам (10-15 сек)...";
-
-    var zaiKey = "4afa4a4d39614b6fa7513a65c6a56166.q1j4llhJlKjaSyka"; 
-
-    var prompt = "Ты — школьный методист. Разбери текст сценария и верни ТОЛЬКО JSON.\n" +
-      "Поля: duration (время), format (Квиз/Квест/Концерт), budget (Без бюджета/Минимальный/Средний), elements (список того, что нужно), full_text (красивый текст).\n\n" +
-      "Текст:\n" + text;
-
-    var requestBody = { 
-      model: "glm-4.5-flash", 
-      messages: [{ role: "user", content: prompt }], 
-      temperature: 0.5,
-      max_tokens: 1000
-    };
-
-    try {
-        var aiResponse = await fetch("https://api.z.ai/api/paas/v4/chat/completions", {
-            method: "POST",
-            headers: { "Authorization": "Bearer " + zaiKey, "Content-Type": "application/json" },
-            body: JSON.stringify(requestBody)
-        });
-
-               var aiJson = await aiResponse.json();
-        var resultText = aiJson.choices[0].message.content.replace(/```json/g, "").replace(/```/g, "").trim();
-        
-        var parsedData = {};
-        try {
-            // Пытаемся прочитать JSON, который выдала нейросеть
-            parsedData = JSON.parse(resultText);
-        } catch (parseError) {
-            // Если нейросеть сломала JSON, делаем заглушку (текст сохранится, но без разбора)
-            parsedData = { 
-                duration: "45 минут", 
-                format: "Мероприятие", 
-                budget: "Без бюджета", 
-                elements: "Сценарий от учителя", 
-                full_text: resultText 
-            };
-        }
-
-        // ВНИМАНИЕ! ВСТАВЬ ССЫЛКУ ИЗ APPS SCRIPT СЮДА!
-        var scriptUrl = "https://script.google.com/macros/s/AKfycbwgTVaaCWgtwi8AZFZEfvOHA2J0QOaIqgyM8ouKM5C74rDCHK975rVVqsIHCDjLJKaqzA/exec"; 
-        
-        var saveResponse = await fetch(scriptUrl, {
-            method: "POST",
-            body: JSON.stringify({ 
-                holiday: holiday, 
-                classVal: classVal, 
-                duration: parsedData.duration || "45 минут",
-                format: parsedData.format || "Мероприятие",
-                budget: parsedData.budget || "Без бюджета",
-                elements: parsedData.elements || "Реквизит",
-                full_text: parsedData.full_text || text
-            })
-        });
-
-        var saveData = await saveResponse.json();
-
-        if (saveData.status === "success") {
-            resDiv.style.color = "green";
-            resDiv.innerText = "Успешно! Сценарий проверен и добавлен в базу.";
-            document.getElementById("userText").value = "";
-        } else {
-            throw new Error(saveData.message);
-        }
-
-    } catch (error) {
-        resDiv.style.color = "red";
-        resDiv.innerText = "Ошибка: " + error.message;
-    } finally {
-        btn.disabled = false;
-        btn.innerText = "Отправить на модерацию";
-    }
+    // Открываем форму в новой вкладке
+    window.open(formUrl, '_blank');
 };
 </script>
 
