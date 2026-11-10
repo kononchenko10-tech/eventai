@@ -300,7 +300,6 @@ document.getElementById("genBtn").onclick = async function() {
     }
 };
 
-// ==================== ЛОГИКА ОТПРАВКИ СВОЕГО СЦЕНАРИЯ ====================
 document.getElementById("submitBtn").onclick = async function() {
     var btn = this;
     var resDiv = document.getElementById("submitResult");
@@ -316,19 +315,72 @@ document.getElementById("submitBtn").onclick = async function() {
     }
 
     btn.disabled = true;
-    btn.innerText = "Отправляю...";
+    btn.innerText = "Нейросеть обрабатывает...";
     resDiv.style.color = "#666";
-    resDiv.innerText = "Нейросеть проверяет и обрабатывает текст...";
+    resDiv.innerText = "Проверяем текст и распределяем по колонкам (10-15 сек)...";
 
-    // ВНИМАНИЕ! СЮДА НУЖНО ВСТАВИТЬ ССЫЛКУ ИЗ APPS SCRIPT (если настроили)
-    var scriptUrl = "https://script.google.com/macros/s/AKfycbwgTVaaCWgtwi8AZFZEfvOHA2J0QOaIqgyM8ouKM5C74rDCHK975rVVqsIHCDjLJKaqzA/exec"; 
+    var zaiKey = "4afa4a4d39614b6fa7513a65c6a56166.q1j4llhJlKjaSyka"; 
+
+    // Промпт для нейросети прямо здесь
+    var prompt = "Ты — школьный методист. Разбери текст сценария и верни ТОЛЬКО JSON.\n" +
+      "Поля: duration (время), format (Квиз/Квест/Концерт), budget (Без бюджета/Минимальный/Средний), elements (список того, что нужно), full_text (красивый текст).\n\n" +
+      "Текст:\n" + text;
+
+    var requestBody = { 
+      model: "glm-4.5-flash", 
+      messages: [{ role: "user", content: prompt }], 
+      temperature: 0.5,
+      max_tokens: 1000
+    };
 
     try {
-        var response = await fetch(scriptUrl, {
+        // 1. Отправляем в нейросеть
+        var aiResponse = await fetch("https://api.z.ai/api/paas/v4/chat/completions", {
             method: "POST",
-            body: JSON.stringify({ holiday: holiday, classVal: classVal, text: text })
+            headers: { "Authorization": "Bearer " + zaiKey, "Content-Type": "application/json" },
+            body: JSON.stringify(requestBody)
         });
 
+        var aiJson = await aiResponse.json();
+        var resultText = aiJson.choices[0].message.content.replace(/```json/g, "").replace(/```/g, "").trim();
+        
+        var parsedData = JSON.parse(resultText);
+
+        // 2. Отправляем готовые данные в Google Script
+        // ВСТАВЬ СВОЙ URL ИЗ APPS SCRIPT
+        var scriptUrl = "ТВОЙ_URL_ИЗ_APPS_SCRIPT"; 
+        
+        var saveResponse = await fetch(scriptUrl, {
+            method: "POST",
+            body: JSON.stringify({ 
+                holiday: holiday, 
+                classVal: classVal, 
+                duration: parsedData.duration || "45 минут",
+                format: parsedData.format || "Мероприятие",
+                budget: parsedData.budget || "Без бюджета",
+                elements: parsedData.elements || "Реквизит",
+                full_text: parsedData.full_text || text
+            })
+        });
+
+        var saveData = await saveResponse.json();
+
+        if (saveData.status === "success") {
+            resDiv.style.color = "green";
+            resDiv.innerText = "Успешно! Сценарий проверен и добавлен в базу.";
+            document.getElementById("userText").value = "";
+        } else {
+            throw new Error(saveData.message);
+        }
+
+    } catch (error) {
+        resDiv.style.color = "red";
+        resDiv.innerText = "Ошибка: " + error.message;
+    } finally {
+        btn.disabled = false;
+        btn.innerText = "Отправить на модерацию";
+    }
+};
         var data = await response.json();
 
         if (data.status === "success") {
