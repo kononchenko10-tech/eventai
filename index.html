@@ -6,222 +6,64 @@
     <title>EventAI - Генератор мероприятий</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
-
-        body { 
-            font-family: 'Inter', sans-serif; 
-            background: linear-gradient(rgba(200, 235, 210, 0.85), rgba(160, 215, 170, 0.9)), 
-                        url('https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=2070&auto=format&fit=crop');
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
-            padding: 20px 10px; 
-            margin: 0;
-            min-height: 100vh;
-            box-sizing: border-box;
-        }
-
-        .container { 
-            max-width: 650px; 
-            margin: 0 auto; 
-            background: white; 
-            padding: 25px; 
-            border-radius: 16px; 
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1); 
-        }
-
-        h2 { 
-            text-align: center; 
-            color: #1a1a1a; 
-            font-size: 24px;
-            margin-bottom: 25px;
-        }
-
-        label { 
-            display: block; 
-            margin-top: 15px; 
-            font-weight: 500; 
-            font-size: 14px; 
-            color: #4a4a4a;
-        }
-
+        body { font-family: 'Inter', sans-serif; background: linear-gradient(rgba(200, 235, 210, 0.85), rgba(160, 215, 170, 0.9)), url('https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=2070&auto=format&fit=crop'); background-size: cover; background-position: center; background-attachment: fixed; padding: 20px 10px; margin: 0; min-height: 100vh; box-sizing: border-box; }
+        .container { max-width: 650px; margin: 0 auto; background: white; padding: 25px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: #1a1a1a; font-size: 24px; margin-bottom: 25px; }
+        label { display: block; margin-top: 15px; font-weight: 500; font-size: 14px; color: #4a4a4a; }
         select, button, input[type="checkbox"] { margin-top: 6px; }
-
-        select { 
-            width: 100%; 
-            padding: 12px; 
-            border-radius: 8px; 
-            border: 1px solid #e0e0e0; 
-            font-size: 15px; 
-            background-color: #fafafa;
-            outline: none;
-            transition: border-color 0.2s;
-            box-sizing: border-box;
-        }
-
-        select:focus { border-color: #4CAF50; background-color: #fff; }
-
+        select { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #e0e0e0; font-size: 15px; background-color: #fafafa; outline: none; box-sizing: border-box; }
         .row { display: flex; gap: 15px; margin-top: 10px; }
         .col { flex: 1; }
-
-        .checkbox-group { 
-            margin-top: 20px; 
-            padding: 15px; 
-            background: #f8fdf9; 
-            border: 1px solid #d1e7dd; 
-            border-radius: 8px; 
-        }
-
+        .checkbox-group { margin-top: 20px; padding: 15px; background: #f8fdf9; border: 1px solid #d1e7dd; border-radius: 8px; }
         .checkbox-group p { font-weight: 600; margin-top: 0; color: #1a1a1a; font-size: 15px; }
-
-        .checkbox-group label { 
-            font-weight: 400; display: flex; align-items: flex-start; gap: 10px; 
-            margin-top: 8px; font-size: 14px; cursor: pointer; color: #333;
-        }
-
+        .checkbox-group label { font-weight: 400; display: flex; align-items: flex-start; gap: 10px; margin-top: 8px; font-size: 14px; cursor: pointer; color: #333; }
         input[type="checkbox"] { width: 18px; height: 18px; accent-color: #4CAF50; cursor: pointer; flex-shrink: 0; margin-top: 2px;}
-
-        button { 
-            width: 100%; padding: 14px; background: #4CAF50; color: white; 
-            border: none; border-radius: 8px; font-size: 16px; font-weight: 600;
-            cursor: pointer; margin-top: 25px; transition: background 0.2s, transform 0.1s;
-            box-shadow: 0 4px 10px rgba(76, 175, 80, 0.2);
-        }
-
+        button { width: 100%; padding: 14px; background: #4CAF50; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 25px; transition: background 0.2s, transform 0.1s; box-shadow: 0 4px 10px rgba(76, 175, 80, 0.2); }
         button:hover { background: #43a047; transform: translateY(-1px); }
         button:disabled { background: #cccccc; cursor: not-allowed; box-shadow: none; transform: none; }
-
-        #result { 
-            margin-top: 25px; padding: 20px; background: #fdfdfd; 
-            border: 1px solid #eeeeee; border-radius: 8px; min-height: 100px; 
-            white-space: pre-wrap; line-height: 1.6; color: #333; font-size: 15px;
-            overflow-wrap: break-word;
-        }
-
+        #result { margin-top: 25px; padding: 20px; background: #fdfdfd; border: 1px solid #eeeeee; border-radius: 8px; min-height: 100px; white-space: pre-wrap; line-height: 1.6; color: #333; font-size: 15px; overflow-wrap: break-word; }
         .divider { margin: 40px 0 20px 0; border: 0; border-top: 1px solid #eee; }
-
-        .btn-suggest {
-            background: #2196F3; 
-            box-shadow: 0 4px 10px rgba(33, 150, 243, 0.2);
-            margin-top: 15px;
-        }
-        .btn-suggest:hover { background: #1976D2; }
-
-        @media (max-width: 600px) {
-            .row { flex-direction: column; gap: 0; }
-            .container { padding: 15px; }
-            h2 { font-size: 20px; }
-        }
+        .btn-suggest { background: #2196F3; box-shadow: 0 4px 10px rgba(33, 150, 243, 0.2); margin-top: 15px; }
+        @media (max-width: 600px) { .row { flex-direction: column; gap: 0; } .container { padding: 15px; } h2 { font-size: 20px; } }
     </style>
 </head>
 <body>
-
 <div class="container">
-    <h2>Генератор мероприятий</h2><label>Праздник:</label>
-    <select id="holiday">
-        <option value="Новый год">Новый год</option>
-        <option value="1 сентября">1 сентября</option>
-        <option value="День учителя">День учителя</option>
-        <option value="8 марта">8 марта</option>
-    </select>
-
+    <h2>Генератор мероприятий</h2>
+    <label>Праздник:</label>
+    <select id="holiday"><option value="Новый год">Новый год</option><option value="1 сентября">1 сентября</option><option value="День учителя">День учителя</option><option value="8 марта">8 марта</option></select>
     <div class="row">
-        <div class="col">
-            <label>От класса:</label>
-            <select id="classFrom">
-                <option value="1">1</option><option value="2">2</option><option value="3">3</option>
-                <option value="4">4</option><option value="5">5</option><option value="6">6</option>
-                <option value="7">7</option><option value="8">8</option><option value="9">9</option>
-                <option value="10">10</option><option value="11">11</option>
-            </select>
-        </div>
-        <div class="col">
-            <label>До класса:</label>
-            <select id="classTo">
-                <option value="1">1</option><option value="2">2</option><option value="3">3</option>
-                <option value="4">4</option><option value="5">5</option><option value="6">6</option>
-                <option value="7">7</option><option value="8">8</option><option value="9">9</option>
-                <option value="10">10</option><option value="11" selected>11</option>
-            </select>
-        </div>
+        <div class="col"><label>От класса:</label><select id="classFrom"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option></select></div>
+        <div class="col"><label>До класса:</label><select id="classTo"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><optionvalue="9">9</option><option value="10">10</option><option value="11" selected>11</option></select></div>
     </div>
-
     <div class="row">
-        <div class="col">
-            <label>Длительность:</label>
-            <select id="duration">
-                <option value="30 минут">30 минут</option>
-                <option value="45 минут">45 минут</option>
-                <option value="1 час" selected>1 час</option>
-                <option value="1.5 часа">1.5 часа</option>
-            </select>
-        </div>
-        <div class="col">
-            <label>Бюджет:</label>
-            <select id="budget">
-                <option value="Без бюджета">Без бюджета (подручное)</option>
-                <option value="Минимальный" selected>Минимальный</option>
-                <option value="Средний">Средний</option>
-            </select>
-        </div>
+        <div class="col"><label>Длительность:</label><select id="duration"><option value="30 минут">30 минут</option><option value="45 минут">45 минут</option><option value="1 час" selected>1 час</option><option value="1.5 часа">1.5 часа</option></select></div>
+        <div class="col"><label>Бюджет:</label><select id="budget"><option value="Без бюджета">Без бюджета</option><option value="Минимальный" selected>Минимальный</option><option value="Средний">Средний</option></select></div>
     </div>
-
     <label style="margin-top: 15px;">Формат сценария:</label>
-    <select id="format">
-        <option value="short">Краткий план</option>
-        <option value="detailed" selected>Подробный с диалогами</option>
-    </select>
-
-    <div class="checkbox-group">
-        <p>Использовать цифровые технологии?</p>
-        <label>
-            <input type="checkbox" id="useTech"> 
-            <span>Да, использовать (мобильные устройства, QR-коды, онлайн-квизы)</span>
-        </label>
-    </div>
-
+    <select id="format"><option value="short">Краткий план</option><option value="detailed" selected>Подробный с диалогами</option></select>
+    <div class="checkbox-group"><p>Использовать цифровые технологии?</p><label><input type="checkbox" id="useTech"> <span>Да, использовать (мобильные, QR, квизы)</span></label></div>
     <button id="genBtn">Сгенерировать мероприятие</button>
     <div id="result">Здесь появится сценарий...</div>
-
     <hr class="divider">
-    
     <h3>Хотите поделиться опытом?</h3>
     <button id="suggestBtn" class="btn-suggest">Предложить свой сценарий</button>
-
 </div>
-
-<!-- СКРЫТЫЙ IFRAME ДЛЯ ОБХОДА CORS -->
-<iframe name="responseFrame" id="responseFrame" style="display:none;"></iframe>
-
 <script>
-function cleanText(inputText) {
-    var text = inputText;
-    text = text.replace(/[\u4E00-\u9FFF\u3040-\u30FF\uAC00-\uD7AF]/g, "");
-    text = text.replace(/\*\*/g, "").replace(/#/g, "").replace(/\|/g, " ").replace(/---/g, "");
-    text = text.replace(/^(Отлично!|Конечно!|Здравствуйте!|Привет!)[^\n]*\n+/i, "");
-    text = text.replace(/^(Вот ваш|Вот сценарий|Я подготовил)[^\n]*\n+/i, "");
-    text = text.replace(/\n+(Этот сценарий дает|Этот сценарий поможет|Надеюсь, этот сценарий|Удачи в организации)[\s\S]*$/i, "");
-    text = text.replace(/\s{2,}/g, " ").replace(/\n{3,}/g, "\n\n");
-    return text.trim();
-}
-
 document.getElementById("genBtn").onclick = async function() {
     var btn = this;
     var resultDiv = document.getElementById("result");
-    
     btn.disabled = true;
-    btn.innerText = "Генерирую... (подождите 15 сек)";
-    resultDiv.innerText = "Анализирую базу и придумываю сценарий...";
+    btn.innerText = "Ищу в базе...";
+    resultDiv.innerText = "Анализирую базу данных...";
     
-    var holiday = document.getElementById("holiday").value;var classFrom = parseInt(document.getElementById("classFrom").value);
+    var holiday = document.getElementById("holiday").value;
+    var classFrom = parseInt(document.getElementById("classFrom").value);
     var classTo = parseInt(document.getElementById("classTo").value);
-    var duration = document.getElementById("duration").value;
-    var budget = document.getElementById("budget").value;
-    var format = document.getElementById("format").value;
-    var useTech = document.getElementById("useTech").checked;
     
     if (classFrom > classTo) { var t = classFrom; classFrom = classTo; classTo = t; }
-    var classDescription = (classFrom === classTo) ? (classFrom + " класс") : ("классы с " + classFrom + " по " + classTo);
 
+    // ССЫЛКА НА ТАБЛИЦУ (замени на свою рабочую!)
     var csvUrl = "https://docs.google.com/spreadsheets/d/1c0uE0lfqJLFeHzI8g1oO1qhMa5MZrwesTTEvJLL1X8/export?format=tsv&gid=0";
 
     try {
@@ -241,64 +83,16 @@ document.getElementById("genBtn").onclick = async function() {
             }
         }
         
-        validScripts.sort(function() { return 0.5 - Math.random(); });
-
-        var examples = "";
-        var takeCount = Math.min(2, validScripts.length);
-        for (var j = 0; j < takeCount; j++) {
-            examples += "Пример: " + validScripts[j].substring(0, 500) + "...\n\n";
+        if (validScripts.length === 0) {
+            resultDiv.innerText = "В базе пока нет сценариев для этих параметров. Попробуйте изменить запрос.";
+        } else {
+            var randomIndex = Math.floor(Math.random() * validScripts.length);
+            resultDiv.innerText = "✨ Сценарий из базы:\n\n" + validScripts[randomIndex];
         }
-        if (examples === "") examples = "В базе нет точных примеров. Придумай сам.";
-
-        var formatInstruction = (format === "detailed") ? "Формат: ПОДРОБНЫЙ сценарий с репликами ведущих." : "Формат: КРАТКИЙ план по этапам.";
-        var techConstraints = useTech ? "ОБЯЗАТЕЛЬНО включи хотя бы один конкурс с цифровыми технологиями." : "КАТЕГОРИЧЕСКИ ЗАПРЕЩЕНО использовать любые цифровые технологии.";
-
-        var prompt = "Ты — опытный школьный методист. Напиши сценарий праздника '" + holiday + "' для " + classDescription + ".\n" +
-        "ПАРАМЕТРЫ: Длительность — " + duration + ", Бюджет — " + budget + ".\n\n" +
-        "ПРАВИЛА:\n1. НЕ пиши вступления от себя! Начинай СРАЗУ с заголовка.\n2. НЕ пиши заключений.\n3. " + formatInstruction + "\n4. " + techConstraints + "\n" +
-        "5. Опирайся на стиль примеров:\n" + examples + "\n6. Пиши только на русском, без ошибок. Не используй ** и #.";
-
-        // ========================================================
-        // ВСТАВЬ СЮДА СВОЮ ССЫЛКУ ИЗ APPS SCRIPT (заканчивается на /exec)
-        var scriptUrl = "https://script.google.com/macros/s/AKfycbwgTVaaCWgtwi8AZFZEfvOHA2J0QOaIqgyM8ouKM5C74rDCHK975rVVqsIHCDjLJKaqzA/exec"; 
-        // ========================================================
-
-        // ОТПРАВЛЯЕМ ЧЕРЕЗ СКРЫТУЮ ФОРМУ (обход CORS)
-        var form = document.createElement("form");
-        form.method = "POST";
-        form.action = scriptUrl;
-        form.target = "responseFrame";
-
-        var input = document.createElement("input");
-        input.type = "hidden";
-        input.name = "prompt";
-        input.value = prompt;
-        form.appendChild(input);
-
-        document.body.appendChild(form);
-        form.submit();
-        document.body.removeChild(form);
-
-        // Слушаем ответ от iframe
-        var iframe = document.getElementById("responseFrame");
-        iframe.onload = function() {
-            try {
-                var content = iframe.contentDocument.body.innerText;
-                var data = JSON.parse(content);
-                if(data.result) {
-                    resultDiv.innerText = cleanText(data.result);
-                } else {
-                    resultDiv.innerText = "Пустой ответ от скрипта.";
-                }
-            } catch (e) {
-                resultDiv.innerText = "Ошибка: не удалось прочитать ответ. Попробуйте еще раз.";
-            } finally {btn.disabled = false;
-                btn.innerText = "Сгенерировать мероприятие";
-            }
-        };
         
     } catch (error) {
         resultDiv.innerText = "Ошибка загрузки базы: " + error.message;
+    } finally {
         btn.disabled = false;
         btn.innerText = "Сгенерировать мероприятие";
     }
