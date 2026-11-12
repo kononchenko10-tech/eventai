@@ -230,7 +230,7 @@ document.getElementById("genBtn").onclick = async function() {
     if (classFrom > classTo) { var t = classFrom; classFrom = classTo; classTo = t; }
     var classDescription = (classFrom === classTo) ? (classFrom + " класс") : ("классы с " + classFrom + " по " + classTo);
 
-    var csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRxFxO--CLQAlb0ScMXkfIorN95AF8owumPwZ0ToeJeWPdOa6JNEO8M7jyn-kgDSLA9gKfLBJLSHSWA/pub?gid=0&single=true&output=csv";
+        var csvUrl = "https://docs.google.com/spreadsheets/d/1c0uE0lfqJLFeHzI8g1oO1qhMa5MZrwesTTEvJLL1X8/export?format=tsv&gid=0";
 
     try {
         var csvResponse = await fetch(csvUrl);
