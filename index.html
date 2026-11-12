@@ -64,7 +64,7 @@ document.getElementById("genBtn").onclick = async function() {
     
     if (classFrom > classTo) { var t = classFrom; classFrom = classTo; classTo = t; }
 
-    var csvUrl = "https://docs.google.com/spreadsheets/d/1c0uE0lfqJLFeHzI8g1oO1qhMa5MZrwesTTEvJLL1X8/export?format=tsv&gid=0";
+    var csvUrl = "https://docs.google.com/spreadsheets/d/1c0uE0IfqJLFeHzI8g1oOl1qhMa5MZrwesTTEvJLL1X8/export?format=tsv&gid=0";
 
     try {
         var csvResponse = await fetch(csvUrl);
