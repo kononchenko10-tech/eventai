@@ -99,7 +99,6 @@
 
         .divider { margin: 40px 0 20px 0; border: 0; border-top: 1px solid #eee; }
 
-        /* Стиль для новой кнопки */
         .btn-suggest {
             background: #2196F3; 
             box-shadow: 0 4px 10px rgba(33, 150, 243, 0.2);
@@ -107,7 +106,6 @@
         }
         .btn-suggest:hover { background: #1976D2; }
 
-        /* Адаптивность для телефонов */
         @media (max-width: 600px) {
             .row { flex-direction: column; gap: 0; }
             .container { padding: 15px; }
@@ -187,7 +185,6 @@
     <button id="genBtn">Сгенерировать мероприятие</button>
     <div id="result">Здесь появится сценарий...</div>
 
-    <!-- ==================== БЛОК С КНОПКОЙ ФОРМЫ ==================== -->
     <hr class="divider">
     
     <h3 style="text-align: center; color: #1a1a1a; margin-bottom: 10px;">Хотите поделиться опытом?</h3>
@@ -198,10 +195,10 @@
 </div>
 
 <script>
-// ОЧИСТКА ТЕКСТА (Иероглифы, markdown, вступления)
+// ОЧИСТКА ТЕКСТА
 function cleanText(inputText) {
     var text = inputText;
-    text = text.replace(/[\u4E00-\u9FFF\u3040-\u30FF\uAC00-\uD7AF]/g, ""); // Иероглифы
+    text = text.replace(/[\u4E00-\u9FFF\u3040-\u30FF\uAC00-\uD7AF]/g, ""); 
     text = text.replace(/\*\*/g, "").replace(/#/g, "").replace(/\|/g, " ").replace(/---/g, "");
     text = text.replace(/^(Отлично!|Конечно!|Здравствуйте!|Привет!)[^\n]*\n+/i, "");
     text = text.replace(/^(Вот ваш|Вот сценарий|Я подготовил)[^\n]*\n+/i, "");
@@ -210,7 +207,7 @@ function cleanText(inputText) {
     return text.trim();
 }
 
-// ==================== ЛОГИКА ГЕНЕРАТОРА ====================
+// ЛОГИКА ГЕНЕРАТОРА
 document.getElementById("genBtn").onclick = async function() {
     var btn = this;
     var resultDiv = document.getElementById("result");
@@ -230,7 +227,8 @@ document.getElementById("genBtn").onclick = async function() {
     if (classFrom > classTo) { var t = classFrom; classFrom = classTo; classTo = t; }
     var classDescription = (classFrom === classTo) ? (classFrom + " класс") : ("классы с " + classFrom + " по " + classTo);
 
-        var csvUrl = "https://docs.google.com/spreadsheets/d/1c0uE0IfqJLFeHzI8g1oOl1qhMa5MZrwesTTEvJLL1X8/export?format=tsv&gid=0";
+    // ИСПРАВЛЕНА ОПЕЧАТКА В ID ТАБЛИЦЫ (lf и O1)
+    var csvUrl = "https://docs.google.com/spreadsheets/d/1c0uE0lfqJLFeHzI8g1oO1qhMa5MZrwesTTEvJLL1X8/export?format=tsv&gid=0";
 
     try {
         var csvResponse = await fetch(csvUrl);
@@ -266,13 +264,9 @@ document.getElementById("genBtn").onclick = async function() {
         "ПРАВИЛА:\n1. НЕ пиши вступления от себя! Начинай СРАЗУ с заголовка.\n2. НЕ пиши заключений.\n3. " + formatInstruction + "\n4. " + techConstraints + "\n" +
         "5. Опирайся на стиль примеров:\n" + examples + "\n6. Пиши только на русском, без ошибок. Не используй ** и #.";
 
-        var zaiKey = "4afa4a4d39614b6fa7513a65c6a56166.q1j4llhJlKjaSyka"; 
-        
-        var requestBody = {
-             // ССЫЛКА НА ТВОЙ APPS SCRIPT (заканчивается на /exec)
-    var scriptUrl = "https://script.google.com/macros/s/AKfycbwgTVaaCWgtwi8AZFZEfvOHA2J0QOaIqgyM8ouKM5C74rDCHK975rVVqsIHCDjLJKaqzA/exec"; 
+        // ССЫЛКА НА APPS SCRIPT (вынесена из неправильного места)
+        var scriptUrl = "https://script.google.com/macros/s/AKfycbwgTVaaCWgtwi8AZFZEfvOHA2J0QOaIqgyM8ouKM5C74rDCHK975rVVqsIHCDjLJKaqzA/exec"; 
 
-    try {
         var response = await fetch(scriptUrl, {
             method: "POST",
             body: JSON.stringify({ prompt: prompt })
@@ -294,3 +288,14 @@ document.getElementById("genBtn").onclick = async function() {
         btn.disabled = false;
         btn.innerText = "Сгенерировать мероприятие";
     }
+};
+
+// ЛОГИКА КНОПКИ "ПРЕДЛОЖИТЬ СЦЕНАРИЙ"
+document.getElementById("suggestBtn").onclick = function() {
+    var formUrl = "https://docs.google.com/forms/d/e/1FAIpQLSf16sLPzAJku5_tqoEmFSZwXILHlWpbmClCxR76oaxV0BS1lQ/viewform";
+    window.open(formUrl, '_blank');
+};
+</script>
+
+</body>
+</html>
