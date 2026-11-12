@@ -73,30 +73,37 @@ document.getElementById("genBtn").onclick = async function() {
         
         var validScripts = [];
         for (var i = 1; i < rows.length; i++) {
-            if (!rows[i].trim()) continue;
-            var cols = rows[i].split("\t");
-            
-            var dbHoliday = (cols[0] || "").trim().toLowerCase();
-            var dbClass = (cols[1] || "").trim();
-            
-            if (dbHoliday.includes(holiday.toLowerCase())) {
-                var isClassMatch = false;
-                if (dbClass.includes("-")) {
-                    var parts = dbClass.split("-");
-                    var start = parseInt(parts[0]);
-                    var end = parseInt(parts[1]);
-                    if (classFrom >= start && classFrom <= end) isClassMatch = true;
-                } else {
-                    var dbNum = parseInt(dbClass);
-                    if (!isNaN(dbNum) && dbNum >= classFrom && dbNum <= classTo) isClassMatch = true;
-                }
-
-                // ВОТ ЗДЕСЬ ИЗМЕНЕНО: теперь берем индекс 6 (колонка G), а не 7
-                if (isClassMatch && cols[6] && cols[6].length > 50) { 
-                    validScripts.push(cols[6]); 
-                }
-            }
+    if (!rows[i].trim()) continue;
+    var cols = rows[i].split("\t");
+    
+    // Очищаем данные от пробелов и приводим к нижнему регистру
+    var dbHoliday = (cols[0] || "").trim().toLowerCase();
+    var dbClass = (cols[1] || "").trim();
+    
+    // 1. Проверяем праздник (ищем вхождение, игнорируя регистр)
+    if (dbHoliday.includes(holiday.toLowerCase())) {
+        
+        var isClassMatch = false;
+        
+        // 2. Умная проверка класса
+        if (dbClass.includes("-")) {
+            // Если в таблице диапазон (например, 5-7)
+            var parts = dbClass.split("-");
+            var start = parseInt(parts[0]);
+            var end = parseInt(parts[1]);
+            if (classFrom >= start && classFrom <= end) isClassMatch = true;
+        } else {
+            // Если в таблице одно число (например, 5)
+            var dbNum = parseInt(dbClass);
+            if (!isNaN(dbNum) && dbNum >= classFrom && dbNum <= classTo) isClassMatch = true;
         }
+
+        // 3. Если класс подошел и есть текст в колонке G (индекс 6)
+        if (isClassMatch && cols[6] && cols[6].length > 50) { 
+            validScripts.push(cols[6]); 
+        }
+    }
+}
         
         if (validScripts.length === 0) {
             resultDiv.innerText = "В базе нет сценариев для этих параметров. Попробуйте изменить класс или праздник.";
