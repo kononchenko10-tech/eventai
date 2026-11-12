@@ -269,38 +269,28 @@ document.getElementById("genBtn").onclick = async function() {
         var zaiKey = "4afa4a4d39614b6fa7513a65c6a56166.q1j4llhJlKjaSyka"; 
         
         var requestBody = {
-            model: "glm-4", 
-            messages: [{ role: "user", content: prompt }],
-            temperature: 0.7
-        };
+             // ССЫЛКА НА ТВОЙ APPS SCRIPT (заканчивается на /exec)
+    var scriptUrl = "https://script.google.com/macros/s/AKfycbwgTVaaCWgtwi8AZFZEfvOHA2J0QOaIqgyM8ouKM5C74rDCHK975rVVqsIHCDjLJKaqzA/exec"; 
 
-        var response = await fetch("https://api.z.ai/api/paas/v4/chat/completions", {
+    try {
+        var response = await fetch(scriptUrl, {
             method: "POST",
-            headers: { "Authorization": "Bearer " + zaiKey, "Content-Type": "application/json" },
-            body: JSON.stringify(requestBody)
+            body: JSON.stringify({ prompt: prompt })
         });
 
-        if (!response.ok) throw new Error("Код ошибки: " + response.status);
+        if (!response.ok) throw new Error("Ошибка прокси: " + response.status);
+        
         var data = await response.json();
-        resultDiv.innerText = cleanText(data.choices[0].message.content);
+        
+        if (data.result) {
+            resultDiv.innerText = cleanText(data.result);
+        } else {
+            throw new Error("Пустой ответ от скрипта");
+        }
         
     } catch (error) {
-        resultDiv.innerText = "Ошибка: " + error.message + "\n\nЕсли ошибка 429 — подождите 2-3 минуты.";
+        resultDiv.innerText = "Ошибка: " + error.message;
     } finally {
         btn.disabled = false;
         btn.innerText = "Сгенерировать мероприятие";
     }
-};
-
-// ==================== ЛОГИКА КНОПКИ "ПРЕДЛОЖИТЬ СЦЕНАРИЙ" ====================
-document.getElementById("suggestBtn").onclick = function() {
-    // СЮДА ВСТАВЬ ССЫЛКУ НА СВОЮ GOOGLE ФОРМУ
-    var formUrl = "https://docs.google.com/forms/d/e/1FAIpQLSfl6sLPzAjKu5_tqoEmFsZWx1LH1wPbmC1cXr76oaxVOBSI1Q/viewform?usp=dialog";
-    
-    // Открываем форму в новой вкладке
-    window.open(formUrl, '_blank');
-};
-</script>
-
-</body>
-</html>
