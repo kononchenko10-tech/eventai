@@ -73,15 +73,34 @@ document.getElementById("genBtn").onclick = async function() {
         
         var validScripts = [];
         for (var i = 1; i < rows.length; i++) {
-            if (!rows[i].trim()) continue;
-            var cols = rows[i].split("\t");
-            if (cols[0] && cols[0].includes(holiday)) {
-                var dbNum = parseInt(cols[1] || "");
-                if (!isNaN(dbNum) && dbNum >= classFrom && dbNum <= classTo) {
-                    if (cols[7] && cols[7].length > 50) { validScripts.push(cols[7]); }
-                }
-            }
+    if (!rows[i].trim()) continue;
+    var cols = rows[i].split("\t");
+    
+    // Очищаем данные от лишних пробелов
+    var dbHoliday = (cols[0] || "").trim().toLowerCase();
+    var dbClass = (cols[1] || "").trim();
+    
+    // Проверяем праздник (ищем вхождение, игнорируя регистр)
+    if (dbHoliday.includes(holiday.toLowerCase())) {
+        
+        // Проверяем класс (если в таблице "5-7", а выбрали 6)
+        var isClassMatch = false;
+        if (dbClass.includes("-")) {
+            var parts = dbClass.split("-");
+            var start = parseInt(parts[0]);
+            var end = parseInt(parts[1]);
+            if (classFrom >= start && classFrom <= end) isClassMatch = true;
+        } else {
+            var dbNum = parseInt(dbClass);
+            if (!isNaN(dbNum) && dbNum >= classFrom && dbNum <= classTo) isClassMatch = true;
         }
+
+        // Если класс подошел и есть текст (колонка H)
+        if (isClassMatch && cols[7] && cols[7].length > 50) { 
+            validScripts.push(cols[7]); 
+        }
+    }
+}
         
         if (validScripts.length === 0) {
             resultDiv.innerText = "В базе пока нет сценариев для этих параметров. Попробуйте изменить запрос.";
