@@ -54,11 +54,11 @@ document.getElementById("genBtn").onclick = function() {
     document.body.removeChild(form);
 
     var iframe = document.getElementById("responseFrame");
-    iframe.onload = function() {
+        iframe.onload = function() {
         try {
-            var content = iframe.contentDocument.body.innerText;
-            var data = JSON.parse(content);
-            resultDiv.innerText = data.result;
+            // Берем просто текст, без парсинга JSON
+            var text = iframe.contentDocument.body.innerText;
+            resultDiv.innerText = text;
         } catch (e) {
             resultDiv.innerText = "Ошибка чтения ответа. Попробуйте еще раз.";
         } finally {
@@ -67,6 +67,6 @@ document.getElementById("genBtn").onclick = function() {
         }
     };
 };
-</script>
+    </script>
 </body>
 </html>
