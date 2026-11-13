@@ -3,70 +3,111 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EventAI - Генератор</title>
+    <title>EventAI - Генератор мероприятий</title>
     <style>
-        body { font-family: Arial, sans-serif; background: #e8f5e9; padding: 20px; }
-        .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        h2 { text-align: center; }
-        select, button { width: 100%; padding: 10px; margin-top: 10px; }
-        button { background: #4CAF50; color: white; border: none; cursor: pointer; font-weight: bold; }
-        #result { margin-top: 20px; padding: 15px; background: #f9f9f9; min-height: 100px; white-space: pre-wrap; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+        body { font-family: 'Inter', sans-serif; background: linear-gradient(rgba(200, 235, 210, 0.85), rgba(160, 215, 170, 0.9)), url('https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=2070&auto=format&fit=crop'); background-size: cover; background-position: center; background-attachment: fixed; padding: 20px 10px; margin: 0; min-height: 100vh; box-sizing: border-box; }
+        .container { max-width: 650px; margin: 0 auto; background: white; padding: 25px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: #1a1a1a; font-size: 24px; margin-bottom: 25px; }
+        label { display: block; margin-top: 15px; font-weight: 500; font-size: 14px; color: #4a4a4a; }
+        select, button, input[type="checkbox"] { margin-top: 6px; }
+        select { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #e0e0e0; font-size: 15px; background-color: #fafafa; outline: none; box-sizing: border-box; }
+        .row { display: flex; gap: 15px; margin-top: 10px; }
+        .col { flex: 1; }
+        .checkbox-group { margin-top: 20px; padding: 15px; background: #f8fdf9; border: 1px solid #d1e7dd; border-radius: 8px; }
+        .checkbox-group p { font-weight: 600; margin-top: 0; color: #1a1a1a; font-size: 15px; }
+        .checkbox-group label { font-weight: 400; display: flex; align-items: flex-start; gap: 10px; margin-top: 8px; font-size: 14px; cursor: pointer; color: #333; }
+        input[type="checkbox"] { width: 18px; height: 18px; accent-color: #4CAF50; cursor: pointer; flex-shrink: 0; margin-top: 2px;}
+        button { width: 100%; padding: 14px; background: #4CAF50; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 25px; transition: background 0.2s, transform 0.1s; box-shadow: 0 4px 10px rgba(76, 175, 80, 0.2); }
+        button:hover { background: #43a047; transform: translateY(-1px); }
+        button:disabled { background: #cccccc; cursor: not-allowed; box-shadow: none; transform: none; }
+        #result { margin-top: 25px; padding: 20px; background: #fdfdfd; border: 1px solid #eeeeee; border-radius: 8px; min-height: 100px; white-space: pre-wrap; line-height: 1.6; color: #333; font-size: 15px; overflow-wrap: break-word; }
+        .divider { margin: 40px 0 20px 0; border: 0; border-top: 1px solid #eee; }
+        .btn-suggest { background: #2196F3; box-shadow: 0 4px 10px rgba(33, 150, 243, 0.2); margin-top: 15px; }
+        @media (max-width: 600px) { .row { flex-direction: column; gap: 0; } .container { padding: 15px; } h2 { font-size: 20px; } }
     </style>
 </head>
 <body>
 <div class="container">
     <h2>Генератор мероприятий</h2>
-    <select id="holiday"><option value="Новый год">Новый год</option><option value="8 марта">8 марта</option></select>
-    <button id="genBtn">Сгенерировать</button>
+    <label>Праздник:</label>
+    <select id="holiday"><option value="Новый год">Новый год</option><option value="1 сентября">1 сентября</option><option value="День учителя">День учителя</option><option value="8 марта">8 марта</option></select>
+    <div class="row">
+        <div class="col"><label>От класса:</label><select id="classFrom"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option></select></div>
+        <div class="col"><label>До класса:</label><select id="classTo"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11" selected>11</option></select></div>
+    </div>
+    <div class="row">
+        <div class="col"><label>Длительность:</label><select id="duration"><option value="30 минут">30 минут</option><option value="45 минут">45 минут</option><option value="1 час" selected>1 час</option><option value="1.5 часа">1.5 часа</option></select></div>
+        <div class="col"><label>Бюджет:</label><select id="budget"><option value="Без бюджета">Без бюджета</option><option value="Минимальный" selected>Минимальный</option><option value="Средний">Средний</option></select></div>
+    </div>
+    <label style="margin-top: 15px;">Формат:</label>
+    <select id="format"><option value="short">Краткий план</option><option value="detailed" selected>Подробный с диалогами</option></select>
+    <div class="checkbox-group"><p>Использовать цифровые технологии?</p><label><input type="checkbox" id="useTech"> <span>Да, использовать (мобильные, QR, квизы)</span></label></div>
+    <button id="genBtn">Сгенерировать мероприятие</button>
     <div id="result">Здесь появится сценарий...</div>
+    <hr class="divider">
+    <h3>Хотите поделиться опытом?</h3>
+    <button id="suggestBtn" class="btn-suggest">Предложить свой сценарий</button>
 </div>
 
-<!-- Скрытый iframe для обхода CORS -->
-<iframe name="responseFrame" id="responseFrame" style="display:none;"></iframe>
-
 <script>
-document.getElementById("genBtn").onclick = function() {
+document.getElementById("genBtn").onclick = async function() {
     var btn = this;
     var resultDiv = document.getElementById("result");
     btn.disabled = true;
-    btn.innerText = "Генерирую (15 сек)...";
-    resultDiv.innerText = "Нейросеть думает...";
+    btn.innerText = "Генерирую...";
+    resultDiv.innerText = "Нейросеть думает... (может занять до 1 минуты)";
     
     var holiday = document.getElementById("holiday").value;
-    var prompt = "Ты — школьный методист. Напиши подробный сценарий праздника '" + holiday + "' с конкурсами.";
+    var prompt = "Ты — школьный методист. Напиши сценарий праздника '" + holiday + "'.";
 
-    // ВСТАВЬ СВОЮ ССЫЛКУ ИЗ APPS SCRIPT (/exec)
+    // ССЫЛКА НА ТВОЙ APPS SCRIPT (заканчивается на /exec)
     var scriptUrl = "https://script.google.com/macros/s/AKfycbwgTVaaCWgtwi8AZFZEfvOHA2J0QOaIqgyM8ouKM5C74rDCHK975rVVqsIHCDjLJKaqzA/exec"; 
 
-    var form = document.createElement("form");
-    form.method = "POST";
-    form.action = scriptUrl;
-    form.target = "responseFrame";
-
-    var input = document.createElement("input");
-    input.type = "hidden";
-    input.name = "prompt";
-    input.value = prompt;
-    form.appendChild(input);
-
-    document.body.appendChild(form);
-    form.submit();
-    document.body.removeChild(form);
-
-    var iframe = document.getElementById("responseFrame");
-        iframe.onload = function() {
-        try {
-            // Берем просто текст, без парсинга JSON
-            var text = iframe.contentDocument.body.innerText;
-            resultDiv.innerText = text;
-        } catch (e) {
-            resultDiv.innerText = "Ошибка чтения ответа. Попробуйте еще раз.";
-        } finally {
-            btn.disabled = false;
-            btn.innerText = "Сгенерировать";
-        }
-    };
+    try {
+        // 1. Отправляем заказ
+        var response = await fetch(scriptUrl, {
+            method: "POST",
+            body: JSON.stringify({ prompt: prompt })
+        });
+        
+        var data = await response.json();
+        if (data.status !== "ok") throw new Error("Ошибка заказа");
+        
+        var orderId = data.id;
+        
+        // 2. Проверяем статус каждые 3 секунды
+        var checkInterval = setInterval(async function() {
+            try {
+                var res = await fetch(scriptUrl + "?id=" + orderId);
+                var statusData = await res.json();
+                
+                if (statusData.status === "Готово") {
+                    clearInterval(checkInterval);
+                    resultDiv.innerText = statusData.result;
+                    btn.disabled = false;
+                    btn.innerText = "Сгенерировать";
+                } else if (statusData.status === "Ошибка") {
+                    clearInterval(checkInterval);
+                    resultDiv.innerText = "Ошибка ИИ: " + statusData.result;
+                    btn.disabled = false;
+                    btn.innerText = "Сгенерировать";
+                }
+            } catch (e) {
+                // Игнорируем ошибки сети при проверке
+            }
+        }, 3000);
+        
+    } catch (error) {
+        resultDiv.innerText = "Ошибка: " + error.message;
+        btn.disabled = false;
+        btn.innerText = "Сгенерировать";
+    }
 };
-    </script>
+
+document.getElementById("suggestBtn").onclick = function() {
+    window.open("https://docs.google.com/forms/d/e/1FAIpQLSf16sLPzAJku5_tqoEmFSZwXILHlWpbmClCxR76oaxV0BS1lQ/viewform", '_blank');
+};
+</script>
 </body>
 </html>
