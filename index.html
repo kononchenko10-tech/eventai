@@ -49,8 +49,12 @@
     <h3>Хотите поделиться опытом?</h3>
     <button id="suggestBtn" class="btn-suggest">Предложить свой сценарий</button>
 </div>
+
+<!-- Скрытый iframe для приема ответа -->
+<iframe name="responseFrame" id="responseFrame" style="display:none;"></iframe>
+
 <script>
-document.getElementById("genBtn").onclick = async function() {
+document.getElementById("genBtn").onclick = function() {
     var btn = this;
     var resultDiv = document.getElementById("result");
     btn.disabled = true;
@@ -58,61 +62,44 @@ document.getElementById("genBtn").onclick = async function() {
     resultDiv.innerText = "Нейросеть думает...";
     
     var holiday = document.getElementById("holiday").value;
-    var classFrom = parseInt(document.getElementById("classFrom").value);
-    var classTo = parseInt(document.getElementById("classTo").value);
-    var duration = document.getElementById("duration").value;
-    var budget = document.getElementById("budget").value;
-    var format = document.getElementById("format").value;
-    var useTech = document.getElementById("useTech").checked;
-    
-    if (classFrom > classTo) { var t = classFrom; classFrom = classTo; classTo = t; }
-    var classDescription = (classFrom === classTo) ? (classFrom + " класс") : ("классы с " + classFrom + " по " + classTo);
-
-    var formatInstruction = (format === "detailed") ? "Формат: ПОДРОБНЫЙ." : "Формат: КРАТКИЙ.";
-    var techConstraints = useTech ? "Включи цифровые технологии." : "Запрещено использовать цифровые технологии.";
-
-    var prompt = "Ты — опытный методист. Напиши сценарий праздника '" + holiday + "' для " + classDescription + ".\n" +
-    "ПАРАМЕТРЫ: Длительность — " + duration + ", Бюджет — " + budget + ".\n" +
-    "ПРАВИЛА: Не пиши вступления. " + formatInstruction + " " + techConstraints;
+    var prompt = "Ты — школьный методист. Напиши сценарий праздника '" + holiday + "'.";
 
     // ССЫЛКА НА ТВОЙ APPS SCRIPT (заканчивается на /exec)
     var scriptUrl = "https://script.google.com/macros/s/AKfycbwgTVaaCWgtwi8AZFZEfvOHA2J0QOaIqgyM8ouKM5C74rDCHK975rVVqsIHCDjLJKaqzA/exec"; 
 
-    try {
-        var response = await fetch(scriptUrl, {
-            method: "POST",
-            body: JSON.stringify({ prompt: prompt })
-        });
-        
-        var data = await response.json();
-        if (data.status !== "ok") throw new Error("Ошибка отправки");
-        
-        var orderId = data.id;
-        
-        var checkInterval = setInterval(async function() {
-            try {
-                var res = await fetch(scriptUrl + "?id=" + orderId);
-                var statusData = await res.json();
-                
-                if (statusData.status === "Готово") {
-                    clearInterval(checkInterval);
-                    resultDiv.innerText = statusData.result;
-                    btn.disabled = false;
-                    btn.innerText = "Сгенерировать";
-                } else if (statusData.status === "Ошибка") {
-                    clearInterval(checkInterval);
-                    resultDiv.innerText = "Ошибка ИИ: " + statusData.result;
-                    btn.disabled = false;
-                    btn.innerText = "Сгенерировать";
-                }
-            } catch (e) {}
-        }, 3000);
-        
-    } catch (error) {
-        resultDiv.innerText = "Ошибка: " + error.message;
-        btn.disabled = false;
-        btn.innerText = "Сгенерировать";
-    }
+    // Отправляем через форму (обходит CORS)
+    var form = document.createElement("form");
+    form.method = "POST";
+    form.action = scriptUrl;
+    form.target = "responseFrame";
+
+    var input = document.createElement("input");
+    input.type = "hidden";
+    input.name = "prompt";
+    input.value = prompt;
+    form.appendChild(input);
+
+    document.body.appendChild(form);
+    form.submit();
+    document.body.removeChild(form);
+
+    // Ждем ответа от iframe
+    var iframe = document.getElementById("responseFrame");
+    iframe.onload = function() {
+        try {
+            var text = iframe.contentDocument.body.innerText;
+            if (text && text.length > 10) {
+                resultDiv.innerText = text;
+            } else {
+                resultDiv.innerText = "Пустой ответ.";
+            }
+        } catch (e) {
+            resultDiv.innerText = "Ошибка чтения ответа.";
+        } finally {
+            btn.disabled = false;
+            btn.innerText = "Сгенерировать";
+        }
+    };
 };
 
 document.getElementById("suggestBtn").onclick = function() {
