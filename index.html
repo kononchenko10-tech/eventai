@@ -85,16 +85,17 @@ document.getElementById("genBtn").onclick = function() {
 
     // Ждем ответа от iframe
     var iframe = document.getElementById("responseFrame");
-    iframe.onload = function() {
+        iframe.onload = function() {
         try {
+            // Берем просто текст, без парсинга JSON
             var text = iframe.contentDocument.body.innerText;
             if (text && text.length > 10) {
                 resultDiv.innerText = text;
             } else {
-                resultDiv.innerText = "Пустой ответ.";
+                resultDiv.innerText = "Нейросеть вернула пустой ответ. Попробуйте еще раз.";
             }
         } catch (e) {
-            resultDiv.innerText = "Ошибка чтения ответа.";
+            resultDiv.innerText = "Ошибка чтения ответа. Проверьте настройки Apps Script.";
         } finally {
             btn.disabled = false;
             btn.innerText = "Сгенерировать";
